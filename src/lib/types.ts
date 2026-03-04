@@ -138,10 +138,13 @@ export interface AnalysisSession {
 
 export interface AnalysisProgress {
   type: "progress" | "game_complete" | "llm_analysis" | "done" | "error";
+  sequence?: number;
   gameIndex?: number;
+  activeGameIndex?: number;
   totalGames?: number;
   moveIndex?: number;
   totalMoves?: number;
+  phaseProgressPercent?: number;
   message: string;
   phase?: "stockfish" | "llm" | "overall";
   gamesCompleted?: number;

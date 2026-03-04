@@ -6,6 +6,7 @@ Set these variables before running the app:
 OPENAI_API_KEY=...
 SUPABASE_URL=...
 SUPABASE_SERVICE_ROLE_KEY=...
+HISTORY_VIEWER_SALT=...
 ```
 
 ## Supabase
@@ -17,6 +18,9 @@ npx supabase db push
 ```
 
 This applies the migration that creates the `analysis_sessions` table used by `/api/history`.
+
+History visibility is isolated by a hashed viewer key derived from the incoming IP address.
+Set `HISTORY_VIEWER_SALT` in production to avoid predictable hashes.
 
 ## Getting Started
 

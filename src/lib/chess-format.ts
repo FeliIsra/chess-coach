@@ -1,13 +1,26 @@
 import { Chess } from "chess.js";
 
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export function sanitizeOpeningName(name?: string): string {
   if (!name) return "Unknown opening";
 
-  const normalized = name
+  const normalized = safeDecode(name)
     .replace(/^\/+/, "")
+    .replace(/^https?:\/\/(?:www\.)?chess\.com\/openings\//i, "")
     .replace(/^www\.chess\.com\/openings\//i, "")
+    .replace(/^chess\.com\/openings\//i, "")
     .replace(/^openings\//i, "")
+    .replace(/[?#].*$/, "")
+    .replace(/\+/g, " ")
     .replace(/[-_/]+/g, " ")
+    .replace(/[^a-zA-Z0-9'.\s]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 

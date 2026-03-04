@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useReducer, useState } from "react";
 import { ChessGame, AnalysisProgress, FullAnalysisResult } from "@/lib/types";
 import ResultsView from "@/components/results-view";
 import ProgressBar from "@/components/progress-bar";
 import ProgressSummary from "@/components/progress-summary";
 import { saveSession } from "@/lib/history";
+import { initialProgressState, progressReducer } from "@/lib/progress-state";
 
 type Stage = "input" | "fetching" | "analyzing" | "done" | "error";
 
@@ -13,26 +14,22 @@ export default function Home() {
   const [username, setUsername] = useState("");
   const [gameCount, setGameCount] = useState(5);
   const [stage, setStage] = useState<Stage>("input");
-  const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
   const [result, setResult] = useState<FullAnalysisResult | null>(null);
-
-  // Progress bar state
-  const [currentPhase, setCurrentPhase] = useState<"fetching" | "stockfish" | "llm" | "overall" | "done">("fetching");
-  const [gamesCompleted, setGamesCompleted] = useState(0);
-  const [totalGames, setTotalGames] = useState(0);
-  const [lastCompletedMessage, setLastCompletedMessage] = useState<string>("");
+  const [progressState, dispatchProgress] = useReducer(
+    progressReducer,
+    initialProgressState
+  );
 
   const handleAnalyze = async () => {
     if (!username.trim()) return;
 
     setStage("fetching");
     setError("");
-    setProgress("Fetching your games from Chess.com...");
-    setCurrentPhase("fetching");
-    setGamesCompleted(0);
-    setTotalGames(0);
-    setLastCompletedMessage("");
+    dispatchProgress({
+      type: "set_fetching",
+      message: "Fetching your games from Chess.com...",
+    });
 
     try {
       const gamesRes = await fetch(
@@ -50,9 +47,10 @@ export default function Home() {
       }
 
       setStage("analyzing");
-      setTotalGames(games.length);
-      setCurrentPhase("stockfish");
-      setProgress("Starting engine analysis...");
+      dispatchProgress({
+        type: "start_stockfish",
+        totalGames: games.length,
+      });
 
       const analyzeRes = await fetch("/api/analyze", {
         method: "POST",
@@ -91,40 +89,12 @@ export default function Home() {
               const fullResult = update.data as FullAnalysisResult;
               setResult(fullResult);
               setStage("done");
-              setCurrentPhase("done");
-              setProgress("Analysis complete.");
+              dispatchProgress({ type: "done" });
               void saveSession(username, fullResult).catch((saveError) => {
                 console.error("Failed to save analysis session", saveError);
               });
             } else {
-              if (update.phase) {
-                setCurrentPhase(update.phase);
-              }
-              if (update.gamesCompleted !== undefined) {
-                setGamesCompleted(update.gamesCompleted);
-              }
-              if (update.totalGames) {
-                setTotalGames(update.totalGames);
-              }
-              if (update.type === "game_complete") {
-                setLastCompletedMessage(update.message);
-              }
-
-              if (update.phase === "stockfish") {
-                setProgress(
-                  update.gamesCompleted && update.totalGames
-                    ? `Engine analyzing your games. Completed ${update.gamesCompleted} of ${update.totalGames}.`
-                    : "Engine analyzing your games..."
-                );
-              } else if (update.phase === "llm") {
-                setProgress(
-                  update.gamesCompleted && update.totalGames
-                    ? `AI coach reviewing patterns. Completed ${update.gamesCompleted} of ${update.totalGames}.`
-                    : "AI coach reviewing your games..."
-                );
-              } else if (update.phase === "overall") {
-                setProgress("Building your study plan...");
-              }
+              dispatchProgress({ type: "apply_update", update });
             }
           } catch (e) {
             if (e instanceof SyntaxError) continue;
@@ -142,11 +112,7 @@ export default function Home() {
     setStage("input");
     setResult(null);
     setError("");
-    setProgress("");
-    setCurrentPhase("fetching");
-    setGamesCompleted(0);
-    setTotalGames(0);
-    setLastCompletedMessage("");
+    dispatchProgress({ type: "reset" });
   };
 
   if (stage === "done" && result) {
@@ -220,11 +186,13 @@ export default function Home() {
         {/* Progress */}
         {(stage === "fetching" || stage === "analyzing") && (
           <ProgressBar
-            currentPhase={currentPhase}
-            gamesCompleted={gamesCompleted}
-            totalGames={totalGames}
-            message={progress}
-            lastCompletedMessage={lastCompletedMessage}
+            currentPhase={progressState.currentPhase}
+            gamesCompleted={progressState.gamesCompleted}
+            totalGames={progressState.totalGames}
+            phaseProgressPercent={progressState.phaseProgressPercent}
+            activeGameIndex={progressState.activeGameIndex}
+            message={progressState.message}
+            lastCompletedMessage={progressState.lastCompletedMessage}
           />
         )}
 

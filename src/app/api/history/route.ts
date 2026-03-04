@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { buildAnalysisSession } from "@/lib/analysis-session";
 import { FullAnalysisResult, AnalysisSession } from "@/lib/types";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
+import { getHistoryViewerKey } from "@/lib/history-viewer";
 
 type AnalysisSessionRow = {
   created_at: string;
   username: string;
+  viewer_key: string;
   games_count: number;
   total_blunders: number;
   total_mistakes: number;
@@ -29,13 +31,15 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
     const username = searchParams.get("username");
+    const viewerKey = getHistoryViewerKey(request);
     const supabase = getSupabaseAdminClient();
 
     let query = supabase
       .from("analysis_sessions")
       .select(
-        "created_at, username, games_count, total_blunders, total_mistakes, average_accuracy, avg_blunders_per_game"
+        "created_at, username, viewer_key, games_count, total_blunders, total_mistakes, average_accuracy, avg_blunders_per_game"
       )
+      .eq("viewer_key", viewerKey)
       .order("created_at", { ascending: true })
       .limit(50);
 
@@ -64,6 +68,7 @@ export async function POST(request: NextRequest) {
       username?: string;
       result?: FullAnalysisResult;
     };
+    const viewerKey = getHistoryViewerKey(request);
 
     if (!username?.trim() || !result) {
       return NextResponse.json(
@@ -77,6 +82,7 @@ export async function POST(request: NextRequest) {
     const { error } = await supabase.from("analysis_sessions").insert({
       created_at: session.date,
       username: session.username,
+      viewer_key: viewerKey,
       games_count: session.gamesCount,
       total_blunders: session.totalBlunders,
       total_mistakes: session.totalMistakes,

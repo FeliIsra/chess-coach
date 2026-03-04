@@ -1,6 +1,7 @@
 "use client";
 
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { useContainerReady } from "@/components/use-container-ready";
 
 interface WinRateChartProps {
   wins: number;
@@ -15,6 +16,7 @@ const COLORS = {
 };
 
 export default function WinRateChart({ wins, losses, draws }: WinRateChartProps) {
+  const { ref, isReady } = useContainerReady<HTMLDivElement>();
   const total = wins + losses + draws;
   if (total === 0) return null;
 
@@ -32,25 +34,29 @@ export default function WinRateChart({ wins, losses, draws }: WinRateChartProps)
 
   return (
     <div className="flex items-center gap-4">
-      <div className="w-24 h-24 shrink-0 min-w-[96px]">
-        <ResponsiveContainer width="100%" height="100%" minWidth={96} minHeight={96}>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={25}
-              outerRadius={40}
-              paddingAngle={2}
-              dataKey="value"
-              strokeWidth={0}
-            >
-              {data.map((entry) => (
-                <Cell key={entry.name} fill={colorMap[entry.name]} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
+      <div ref={ref} className="w-24 h-24 shrink-0 min-w-[96px]">
+        {isReady ? (
+          <ResponsiveContainer width="100%" height="100%" minWidth={96} minHeight={96}>
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={25}
+                outerRadius={40}
+                paddingAngle={2}
+                dataKey="value"
+                strokeWidth={0}
+              >
+                {data.map((entry) => (
+                  <Cell key={entry.name} fill={colorMap[entry.name]} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-full w-full rounded-full bg-surface-2/70" />
+        )}
       </div>
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-2">

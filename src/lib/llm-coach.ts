@@ -1,6 +1,34 @@
 import OpenAI from "openai";
-import { GameAnalysis, LLMInsight, WeakSpot } from "./types";
+import { GameAnalysis, LLMInsight, TacticalCategory, WeakSpot } from "./types";
 import { sanitizeOpeningName } from "./chess-format";
+
+const VALID_CATEGORIES: TacticalCategory[] = [
+  "tactics",
+  "piece safety",
+  "king safety",
+  "pawn structure",
+  "endgame",
+  "opening",
+  "positional",
+  "time management",
+];
+
+const INFERENCE_PATTERNS = [
+  /you probably thought/i,
+  /you likely thought/i,
+  /you may have thought/i,
+  /you were trying to/i,
+  /you probably felt/i,
+  /you likely felt/i,
+];
+
+type OverallInsightResponse = {
+  summary: string;
+  topStrengths: string[];
+  topWeaknesses: string[];
+  studyPlan: string[];
+  weakSpotTips?: { category: string; tip: string }[];
+};
 
 export function createOpenAIClient() {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -19,6 +47,229 @@ function formatMoveContext(move: GameAnalysis["worstMoves"][0]): string {
     `Best move was: ${move.bestMove}`,
     `Classification: ${move.classification}`,
   ].join("\n");
+}
+
+function normalizeText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function stripInferredIntent(text: string): string {
+  const sentences = text
+    .split(/(?<=[.!?])\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  const filtered = sentences.filter(
+    (sentence) => !INFERENCE_PATTERNS.some((pattern) => pattern.test(sentence))
+  );
+
+  return (filtered.length > 0 ? filtered : sentences).join(" ").trim();
+}
+
+function sanitizeSentence(text: string, fallback: string): string {
+  const stripped = stripInferredIntent(text);
+  const normalized = stripped
+    .replace(/\s+/g, " ")
+    .replace(/\s+([,.;!?])/g, "$1")
+    .trim();
+  return normalized || fallback;
+}
+
+function asString(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function asInteger(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return Math.trunc(value);
+  }
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return Math.trunc(parsed);
+  }
+  return undefined;
+}
+
+function asStringList(
+  value: unknown,
+  fallback: string[],
+  maxItems: number
+): string[] {
+  if (!Array.isArray(value)) return fallback;
+  const cleaned = value
+    .map((item) => asString(item))
+    .filter((item): item is string => Boolean(item))
+    .map((item) =>
+      sanitizeSentence(
+        item,
+        "Review the critical moment and compare your move with the engine line."
+      )
+    )
+    .slice(0, maxItems);
+
+  return cleaned.length > 0 ? cleaned : fallback;
+}
+
+function asCategory(value: unknown): TacticalCategory | undefined {
+  const category = asString(value)?.toLowerCase();
+  if (!category) return undefined;
+  return VALID_CATEGORIES.find((entry) => entry === category);
+}
+
+function sanitizeWorstMoves(
+  raw: unknown,
+  fallbackMoves: GameAnalysis["worstMoves"]
+): LLMInsight["worstMovesAnalysis"] {
+  const input = Array.isArray(raw) ? raw : [];
+  const entries = input
+    .map((item, index) => {
+      if (!item || typeof item !== "object") return null;
+      const record = item as Record<string, unknown>;
+      const fallback = fallbackMoves[index];
+
+      const move = asString(record.move) ?? fallback?.san;
+      const moveNumber = asInteger(record.moveNumber) ?? fallback?.moveNumber;
+      const explanation = sanitizeSentence(
+        asString(record.explanation) ??
+          "This move drops too much value and gives your opponent clear counterplay.",
+        "This move drops too much value and gives your opponent clear counterplay."
+      );
+      const concept =
+        asString(record.concept) ??
+        "Scan forcing moves and direct threats before committing.";
+      const category = asCategory(record.category) ?? "tactics";
+
+      if (!move || moveNumber === undefined) return null;
+
+      return {
+        move,
+        moveNumber,
+        explanation,
+        concept,
+        category,
+      };
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+
+  const deduped: LLMInsight["worstMovesAnalysis"] = [];
+  const seen = new Set<string>();
+  for (const entry of entries) {
+    const key = `${entry.moveNumber}:${normalizeText(entry.explanation)}:${normalizeText(entry.concept)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(entry);
+  }
+
+  if (deduped.length > 0) {
+    return deduped.slice(0, 6);
+  }
+
+  return fallbackMoves.slice(0, 3).map((move) => ({
+    move: move.san,
+    moveNumber: move.moveNumber,
+    explanation:
+      "This move loses important control and worsens your position quickly.",
+    concept: "Check forcing responses before making a move.",
+    category: "tactics",
+  }));
+}
+
+function sanitizeBestMoves(
+  raw: unknown,
+  fallbackMoves: GameAnalysis["bestMoves"]
+): LLMInsight["bestMovesAnalysis"] {
+  const input = Array.isArray(raw) ? raw : [];
+  const entries = input
+    .map((item, index) => {
+      if (!item || typeof item !== "object") return null;
+      const record = item as Record<string, unknown>;
+      const fallback = fallbackMoves[index];
+
+      const move = asString(record.move) ?? fallback?.san;
+      const moveNumber = asInteger(record.moveNumber) ?? fallback?.moveNumber;
+      const explanation = sanitizeSentence(
+        asString(record.explanation) ??
+          "This move improves activity and keeps your position stable.",
+        "This move improves activity and keeps your position stable."
+      );
+      const concept =
+        asString(record.concept) ??
+        "Coordinate your pieces and improve their activity.";
+
+      if (!move || moveNumber === undefined) return null;
+
+      return {
+        move,
+        moveNumber,
+        explanation,
+        concept,
+      };
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+
+  const deduped: LLMInsight["bestMovesAnalysis"] = [];
+  const seen = new Set<string>();
+  for (const entry of entries) {
+    const key = `${entry.moveNumber}:${normalizeText(entry.explanation)}:${normalizeText(entry.concept)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(entry);
+  }
+
+  if (deduped.length > 0) {
+    return deduped.slice(0, 4);
+  }
+
+  return fallbackMoves.slice(0, 2).map((move) => ({
+    move: move.san,
+    moveNumber: move.moveNumber,
+    explanation:
+      "This move keeps your position healthy and avoids unnecessary weaknesses.",
+    concept: "Improve piece coordination with low risk.",
+  }));
+}
+
+function sanitizeLLMInsight(
+  raw: unknown,
+  reviewMoves: GameAnalysis["worstMoves"],
+  highlightMoves: GameAnalysis["bestMoves"]
+): LLMInsight {
+  const record = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+
+  return {
+    worstMovesAnalysis: sanitizeWorstMoves(record.worstMovesAnalysis, reviewMoves),
+    bestMovesAnalysis: sanitizeBestMoves(record.bestMovesAnalysis, highlightMoves),
+    summary: sanitizeSentence(
+      asString(record.summary) ??
+        "The game had useful ideas, but key tactical moments decided the result.",
+      "The game had useful ideas, but key tactical moments decided the result."
+    ),
+    improvementPlan: asStringList(
+      record.improvementPlan,
+      [
+        "Review your biggest error and replay the best line until it feels natural.",
+        "Before each move, check opponent threats and forcing moves.",
+        "Practice 5 tactical puzzles focused on your main weak theme.",
+      ],
+      5
+    ),
+    strengths: asStringList(
+      record.strengths,
+      ["You found practical moves in several positions."],
+      4
+    ),
+    weaknesses: asStringList(
+      record.weaknesses,
+      ["Critical tactical moments are still costing too many points."],
+      4
+    ),
+  };
 }
 
 export async function analyzeGameWithLLM(
@@ -52,7 +303,7 @@ Respond in JSON format with this exact structure:
     {
       "move": "the move in SAN",
       "moveNumber": 5,
-      "explanation": "2-3 sentences explaining WHY this was bad in simple terms. What did the player miss? What happens after the better move?",
+      "explanation": "2-3 sentences. Explain the concrete consequence and what line was better.",
       "concept": "The chess concept to study (e.g., 'knight forks', 'back rank safety', 'piece activity')",
       "category": "One of: tactics | piece safety | king safety | pawn structure | endgame | opening | positional | time management"
     }
@@ -61,37 +312,36 @@ Respond in JSON format with this exact structure:
     {
       "move": "the move in SAN",
       "moveNumber": 12,
-      "explanation": "2-3 sentences praising what was good. What principle did the player apply well?",
+      "explanation": "2-3 sentences. Explain exactly what this move improved.",
       "concept": "The chess concept demonstrated"
     }
   ],
-  "summary": "A 2-3 sentence friendly summary of this game. What went well, what went wrong.",
+  "summary": "A short practical summary of this game.",
   "improvementPlan": ["Specific actionable tip 1", "Specific actionable tip 2", "Specific actionable tip 3"],
   "strengths": ["Strength 1 observed in this game", "Strength 2"],
   "weaknesses": ["Weakness 1 observed", "Weakness 2"]
 }
 
 Rules:
-- Be calm, direct, and helpful. Do not use hype.
-- Use simple language, avoid complex chess jargon unless you explain it
-- Reference SPECIFIC moves and positions, not generic advice
-- For each bad move, explain the concrete consequence of the move and the better alternative
-- Do not guess the player's intention with phrases like "you probably thought" unless the position makes it obvious
-- Do not praise neutral or defensive moves as "excellent" unless the evaluation swing clearly supports it
-- For each good move, reinforce the exact pattern so the player repeats it
-- The improvement plan should be SPECIFIC to this game, not generic`;
+- Be calm, direct, and practical. No motivational filler.
+- Always reference concrete board consequences, not generic advice.
+- For each bad move, state what was lost (material, king safety, initiative, structure, endgame quality).
+- Never write psychological assumptions like "you probably thought" or "you likely thought".
+- Do not overpraise neutral moves. If the gain is small, describe it as "solid" instead of "excellent".
+- Improvement plan items must be specific drills tied to this game.`;
 
   const response = await client.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
-    temperature: 0.7,
+    temperature: 0.4,
   });
 
   const content = response.choices[0]?.message?.content;
   if (!content) throw new Error("Empty LLM response");
 
-  return JSON.parse(content) as LLMInsight;
+  const parsed = JSON.parse(content) as unknown;
+  return sanitizeLLMInsight(parsed, reviewMoves, highlightMoves);
 }
 
 export function aggregateWeakSpots(insights: LLMInsight[]): WeakSpot[] {
@@ -109,17 +359,74 @@ export function aggregateWeakSpots(insights: LLMInsight[]): WeakSpot[] {
     .map(([category, count]) => ({ category, count, tip: "" }));
 }
 
+function sanitizeWeakSpotTips(
+  rawTips: unknown,
+  requiredCategories: string[]
+): { category: string; tip: string }[] {
+  const input = Array.isArray(rawTips) ? rawTips : [];
+  const byCategory = new Map<string, string>();
+
+  for (const item of input) {
+    if (!item || typeof item !== "object") continue;
+    const record = item as Record<string, unknown>;
+    const category = asString(record.category);
+    const tip = asString(record.tip);
+    if (!category || !tip) continue;
+    byCategory.set(category, sanitizeSentence(tip, "Review similar positions and focus on this theme."));
+  }
+
+  return requiredCategories.map((category) => ({
+    category,
+    tip:
+      byCategory.get(category) ??
+      "Review two recent mistakes in this theme and solve 5 focused puzzles.",
+  }));
+}
+
+function sanitizeOverallInsight(
+  raw: unknown,
+  weakSpots: WeakSpot[]
+): OverallInsightResponse {
+  const record = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const requiredCategories = weakSpots.map((ws) => ws.category);
+
+  return {
+    summary: sanitizeSentence(
+      asString(record.summary) ??
+        "Your results show recurring tactical errors that are currently the biggest rating blocker.",
+      "Your results show recurring tactical errors that are currently the biggest rating blocker."
+    ),
+    topStrengths: asStringList(
+      record.topStrengths,
+      ["You can keep playable positions when the position stays simple."],
+      3
+    ),
+    topWeaknesses: asStringList(
+      record.topWeaknesses,
+      ["Critical moments still include avoidable tactical oversights."],
+      3
+    ),
+    studyPlan: asStringList(
+      record.studyPlan,
+      [
+        "Review your top 3 blunders and write the best move for each position.",
+        "Do 10 puzzles focused on your most frequent weak category.",
+        "Play one slower game and spend extra time before tactical decisions.",
+      ],
+      5
+    ),
+    weakSpotTips:
+      requiredCategories.length > 0
+        ? sanitizeWeakSpotTips(record.weakSpotTips, requiredCategories)
+        : [],
+  };
+}
+
 export async function generateOverallInsight(
   client: OpenAI,
   analyses: GameAnalysis[],
   insights: LLMInsight[]
-): Promise<{
-  summary: string;
-  topStrengths: string[];
-  topWeaknesses: string[];
-  studyPlan: string[];
-  weakSpotTips?: { category: string; tip: string }[];
-}> {
+): Promise<OverallInsightResponse> {
   const gamesSummary = analyses.map((a, i) => {
     const g = a.game;
     return `Game ${i + 1}: ${g.result} as ${g.userColor} vs ${g.opponentName} (${g.opponentRating}) - ${sanitizeOpeningName(g.openingName)} - ${a.blunders} blunders, ${a.mistakes} mistakes`;
@@ -128,9 +435,10 @@ export async function generateOverallInsight(
   const allStrengths = insights.flatMap((i) => i.strengths);
   const allWeaknesses = insights.flatMap((i) => i.weaknesses);
   const weakSpots = aggregateWeakSpots(insights);
-  const weakSpotsText = weakSpots.length > 0
-    ? `\n## Tactical Weak Spots (by error frequency):\n${weakSpots.map((ws) => `- ${ws.category}: ${ws.count} errors`).join("\n")}`
-    : "";
+  const weakSpotsText =
+    weakSpots.length > 0
+      ? `\n## Tactical Weak Spots (by error frequency):\n${weakSpots.map((ws) => `- ${ws.category}: ${ws.count} errors`).join("\n")}`
+      : "";
 
   const prompt = `You are a precise chess coach. Based on the analysis of ${analyses.length} recent games, provide an overall assessment.
 
@@ -158,19 +466,22 @@ Respond in JSON:
   "weakSpotTips": [{"category": "the category name", "tip": "One actionable sentence of advice for this weak area"}]
 }
 
-For weakSpotTips, include one entry for each of these categories: ${weakSpots.map((ws) => ws.category).join(", ")}. Each tip should be a specific, actionable one-liner.
-
-Be specific, reference patterns you see across games, and avoid motivational filler. Make the study plan actionable with concrete exercises.`;
+Rules:
+- No motivational filler.
+- No psychological guesses about player intent.
+- Every study step must be concrete and measurable.
+- Include one weakSpotTips entry for each category: ${weakSpots.map((ws) => ws.category).join(", ") || "none"}.`;
 
   const response = await client.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
-    temperature: 0.7,
+    temperature: 0.4,
   });
 
   const content = response.choices[0]?.message?.content;
   if (!content) throw new Error("Empty LLM response");
 
-  return JSON.parse(content);
+  const parsed = JSON.parse(content) as unknown;
+  return sanitizeOverallInsight(parsed, weakSpots);
 }

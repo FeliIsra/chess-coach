@@ -5,6 +5,12 @@ import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { LLMInsight, MoveAnalysis, TacticalCategory } from "@/lib/types";
 import { formatBestMoveLabel } from "@/lib/chess-format";
+import {
+  applyPuzzleAttempt,
+  canRevealSolution,
+  createPuzzleSessionStats,
+  getFirstTryRatePercent,
+} from "@/lib/puzzle-metrics";
 
 export interface Puzzle {
   id: string;
@@ -78,11 +84,7 @@ export default function PuzzleTrainer({
 }: Props) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [attemptsForCurrent, setAttemptsForCurrent] = useState(0);
-  const [stats, setStats] = useState({
-    solved: 0,
-    solvedFirstTry: 0,
-    attempts: 0,
-  });
+  const [stats, setStats] = useState(createPuzzleSessionStats);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
 
   const puzzle = puzzles[currentIndex];
@@ -131,16 +133,12 @@ export default function PuzzleTrainer({
         playedMove === bestMove ||
         playedMove.slice(0, 4) === bestMove.slice(0, 4);
 
-      setStats((current) => ({ ...current, attempts: current.attempts + 1 }));
+      setStats((current) =>
+        applyPuzzleAttempt(current, attemptsForCurrent, isCorrect)
+      );
 
       if (isCorrect) {
         setFeedback("correct");
-        setStats((current) => ({
-          ...current,
-          solved: current.solved + 1,
-          solvedFirstTry:
-            current.solvedFirstTry + (attemptsForCurrent === 0 ? 1 : 0),
-        }));
       } else {
         setFeedback("wrong");
         setAttemptsForCurrent((current) => current + 1);
@@ -160,7 +158,12 @@ export default function PuzzleTrainer({
         </p>
         <div className="space-y-1 text-sm text-muted">
           <p>{stats.solvedFirstTry} solved on the first try</p>
-          <p>{stats.attempts} total attempts</p>
+          <p>{stats.attemptedPuzzles} puzzles attempted</p>
+          <p>{stats.attempts} total move attempts</p>
+          <p>
+            {getFirstTryRatePercent(stats.solvedFirstTry, stats.attemptedPuzzles)}%
+            {" "}first-try rate
+          </p>
         </div>
         <button
           onClick={onClose}
@@ -190,7 +193,12 @@ export default function PuzzleTrainer({
           </span>
           <div className="text-right">
             <p className="font-mono text-foreground">{stats.solved} solved</p>
-            <p className="text-xs text-muted">{stats.solvedFirstTry} first try</p>
+            <p className="text-xs text-muted">
+              {stats.attemptedPuzzles} attempted ·
+              {" "}
+              {getFirstTryRatePercent(stats.solvedFirstTry, stats.attemptedPuzzles)}%
+              {" "}first try
+            </p>
           </div>
         </div>
 
@@ -270,7 +278,7 @@ export default function PuzzleTrainer({
             Attempts on this puzzle: {attemptsForCurrent + (feedback === "correct" ? 1 : 0)}
           </p>
           <div className="flex gap-2">
-            {feedback === "wrong" && attemptsForCurrent >= 2 && (
+            {feedback === "wrong" && canRevealSolution(attemptsForCurrent) && (
               <button
                 onClick={() => setFeedback("revealed")}
                 className="px-3 py-2 text-xs bg-surface-2 hover:bg-surface-3 text-foreground rounded-lg border border-border transition-colors"

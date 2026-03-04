@@ -25,8 +25,13 @@ export async function POST(request: NextRequest) {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
+      let sequence = 0;
       const send = (progress: AnalysisProgress) => {
-        controller.enqueue(encoder.encode(JSON.stringify(progress) + "\n"));
+        const payload: AnalysisProgress = {
+          ...progress,
+          sequence: ++sequence,
+        };
+        controller.enqueue(encoder.encode(JSON.stringify(payload) + "\n"));
       };
 
       try {
@@ -40,6 +45,7 @@ export async function POST(request: NextRequest) {
           phase: "stockfish",
           totalGames: games.length,
           gamesCompleted: 0,
+          phaseProgressPercent: 0,
           message: `Starting engine analysis of ${games.length} games...`,
         });
 
@@ -49,10 +55,12 @@ export async function POST(request: NextRequest) {
               type: "progress",
               phase: "stockfish",
               gameIndex: i,
+              activeGameIndex: i,
               totalGames: games.length,
               moveIndex: moveIdx,
               totalMoves,
               gamesCompleted,
+              phaseProgressPercent: Math.round((moveIdx / Math.max(totalMoves, 1)) * 100),
               message: `Game ${i + 1}/${games.length}: evaluating move ${moveIdx}/${totalMoves}`,
             });
           });
@@ -66,6 +74,7 @@ export async function POST(request: NextRequest) {
             gameIndex: i,
             totalGames: games.length,
             gamesCompleted,
+            phaseProgressPercent: Math.round((gamesCompleted / games.length) * 100),
             message: `Game ${i + 1} analyzed: ${analysis.blunders} blunders, ${analysis.mistakes} mistakes`,
             data: analysis,
           });
@@ -94,6 +103,7 @@ export async function POST(request: NextRequest) {
           phase: "llm",
           totalGames: allAnalyses.length,
           gamesCompleted: 0,
+          phaseProgressPercent: 0,
           message: `AI coach reviewing ${allAnalyses.length} games...`,
         });
 
@@ -108,6 +118,9 @@ export async function POST(request: NextRequest) {
               gameIndex: i,
               totalGames: allAnalyses.length,
               gamesCompleted: llmCompleted,
+              phaseProgressPercent: Math.round(
+                (llmCompleted / allAnalyses.length) * 100
+              ),
               message: `AI review complete for ${llmCompleted} of ${allAnalyses.length} games`,
             });
             return insight;
@@ -118,6 +131,7 @@ export async function POST(request: NextRequest) {
         send({
           type: "llm_analysis",
           phase: "overall",
+          phaseProgressPercent: 100,
           message: "Generating your personalized improvement plan...",
         });
 
