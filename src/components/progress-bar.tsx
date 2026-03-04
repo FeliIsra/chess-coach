@@ -11,8 +11,8 @@ interface ProgressBarProps {
 }
 
 const steps = [
-  { key: "fetching", icon: "♟", label: "Fetch Games" },
-  { key: "stockfish", icon: "⚙", label: "Engine Analysis" },
+  { key: "fetching", icon: "♟", label: "Fetch" },
+  { key: "stockfish", icon: "⚙", label: "Engine" },
   { key: "llm", icon: "♞", label: "AI Review" },
   { key: "done", icon: "♔", label: "Done" },
 ] as const;
@@ -41,51 +41,59 @@ export default function ProgressBar({
     totalGames > 0 ? Math.min(100, Math.max(0, phaseProgressPercent)) : 0;
   const showPhaseProgress =
     (currentPhase === "stockfish" || currentPhase === "llm") && totalGames > 0;
-  const phaseLabel = currentPhase === "llm" ? "AI review" : "Engine";
+  const phaseLabel = currentPhase === "llm" ? "AI review" : "Engine analysis";
+  const phaseProgressLabel =
+    currentPhase === "stockfish" && activeGameIndex !== null
+      ? `Game ${activeGameIndex + 1} progress`
+      : `${phaseLabel} progress`;
+  const completedGamesLabel =
+    currentPhase === "llm"
+      ? `Games reviewed: ${gamesCompleted} / ${totalGames}`
+      : `Games finished: ${gamesCompleted} / ${totalGames}`;
 
   return (
     <div className="w-full space-y-4">
       {/* Step indicators */}
-      <div className="flex items-center justify-between">
+      <div className="grid grid-cols-4 gap-2">
         {steps.map((step, i) => {
           const isCompleted = i < activeIdx;
           const isActive = i === activeIdx;
 
           return (
-            <div key={step.key} className="flex items-center flex-1 last:flex-none">
-              {/* Step circle */}
+            <div
+              key={step.key}
+              className={`rounded-xl border px-2 py-2.5 text-center transition-colors ${
+                isCompleted
+                  ? "border-primary/50 bg-primary/10"
+                  : isActive
+                  ? "border-primary bg-primary/15"
+                  : "border-border bg-surface-2"
+              }`}
+            >
               <div className="flex flex-col items-center">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-300 ${
+                  className={`h-9 w-9 rounded-full flex items-center justify-center text-base transition-all duration-300 ${
                     isCompleted
                       ? "bg-primary text-white"
                       : isActive
                       ? "bg-primary text-white pulse-active"
-                      : "bg-surface-2 text-muted border border-border"
+                      : "bg-surface-3 text-muted border border-border"
                   }`}
                 >
                   {step.icon}
                 </div>
                 <span
-                  className={`text-xs mt-1 whitespace-nowrap ${
-                    isActive ? "text-primary font-medium" : isCompleted ? "text-foreground" : "text-muted"
+                  className={`mt-1 text-[11px] leading-tight ${
+                    isActive
+                      ? "text-primary font-semibold"
+                      : isCompleted
+                      ? "text-foreground"
+                      : "text-muted"
                   }`}
                 >
                   {step.label}
                 </span>
               </div>
-
-              {/* Connecting line */}
-              {i < steps.length - 1 && (
-                <div className="flex-1 h-0.5 mx-2 mb-5 rounded-full overflow-hidden bg-surface-3">
-                  <div
-                    className="h-full bg-primary transition-all duration-500"
-                    style={{
-                      width: isCompleted ? "100%" : isActive ? "50%" : "0%",
-                    }}
-                  />
-                </div>
-              )}
             </div>
           );
         })}
@@ -95,12 +103,7 @@ export default function ProgressBar({
       {showPhaseProgress && (
         <div className="bg-surface-1 rounded-lg p-3 border border-border">
           <div className="flex justify-between text-xs text-muted mb-1.5">
-            <span>
-              {phaseLabel}: completed {gamesCompleted} of {totalGames} games
-              {currentPhase === "stockfish" && activeGameIndex !== null
-                ? ` · active game ${activeGameIndex + 1}`
-                : ""}
-            </span>
+            <span>{phaseProgressLabel}</span>
             <span>{normalizedProgress}%</span>
           </div>
           <div className="w-full h-1.5 bg-surface-3 rounded-full overflow-hidden">
@@ -111,6 +114,7 @@ export default function ProgressBar({
               }}
             />
           </div>
+          <p className="mt-2 text-xs text-muted">{completedGamesLabel}</p>
         </div>
       )}
 

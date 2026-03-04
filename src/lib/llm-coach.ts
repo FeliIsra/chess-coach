@@ -30,8 +30,71 @@ type OverallInsightResponse = {
   weakSpotTips?: { category: string; tip: string }[];
 };
 
+interface LLMStreamOptions {
+  onDelta?: (delta: string) => void;
+}
+
 export function createOpenAIClient() {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
+
+function extractJsonPayload(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    throw new Error("Empty LLM response");
+  }
+
+  const fencedMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fencedMatch?.[1]) {
+    return fencedMatch[1].trim();
+  }
+
+  const firstBrace = trimmed.indexOf("{");
+  const lastBrace = trimmed.lastIndexOf("}");
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    return trimmed.slice(firstBrace, lastBrace + 1);
+  }
+
+  return trimmed;
+}
+
+function readDeltaText(delta: unknown): string {
+  if (typeof delta === "string") return delta;
+  if (!Array.isArray(delta)) return "";
+
+  return delta
+    .map((part) => {
+      if (typeof part === "string") return part;
+      if (!part || typeof part !== "object") return "";
+      const record = part as Record<string, unknown>;
+      return typeof record.text === "string" ? record.text : "";
+    })
+    .join("");
+}
+
+async function requestJsonCompletionWithStreaming(
+  client: OpenAI,
+  prompt: string,
+  options?: LLMStreamOptions
+): Promise<unknown> {
+  const stream = await client.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }],
+    response_format: { type: "json_object" },
+    temperature: 0.4,
+    stream: true,
+  });
+
+  let buffer = "";
+  for await (const chunk of stream) {
+    const delta = readDeltaText(chunk.choices[0]?.delta?.content);
+    if (!delta) continue;
+    buffer += delta;
+    options?.onDelta?.(delta);
+  }
+
+  const jsonPayload = extractJsonPayload(buffer);
+  return JSON.parse(jsonPayload) as unknown;
 }
 
 function formatMoveContext(move: GameAnalysis["worstMoves"][0]): string {
@@ -274,7 +337,8 @@ function sanitizeLLMInsight(
 
 export async function analyzeGameWithLLM(
   client: OpenAI,
-  analysis: GameAnalysis
+  analysis: GameAnalysis,
+  options?: LLMStreamOptions
 ): Promise<LLMInsight> {
   const { game, bestMoves, worstMoves } = analysis;
   const reviewMoves = worstMoves.filter((move) => move.classification !== "good").slice(0, 6);
@@ -330,17 +394,7 @@ Rules:
 - Do not overpraise neutral moves. If the gain is small, describe it as "solid" instead of "excellent".
 - Improvement plan items must be specific drills tied to this game.`;
 
-  const response = await client.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [{ role: "user", content: prompt }],
-    response_format: { type: "json_object" },
-    temperature: 0.4,
-  });
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) throw new Error("Empty LLM response");
-
-  const parsed = JSON.parse(content) as unknown;
+  const parsed = await requestJsonCompletionWithStreaming(client, prompt, options);
   return sanitizeLLMInsight(parsed, reviewMoves, highlightMoves);
 }
 
@@ -425,7 +479,8 @@ function sanitizeOverallInsight(
 export async function generateOverallInsight(
   client: OpenAI,
   analyses: GameAnalysis[],
-  insights: LLMInsight[]
+  insights: LLMInsight[],
+  options?: LLMStreamOptions
 ): Promise<OverallInsightResponse> {
   const gamesSummary = analyses.map((a, i) => {
     const g = a.game;
@@ -472,16 +527,6 @@ Rules:
 - Every study step must be concrete and measurable.
 - Include one weakSpotTips entry for each category: ${weakSpots.map((ws) => ws.category).join(", ") || "none"}.`;
 
-  const response = await client.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [{ role: "user", content: prompt }],
-    response_format: { type: "json_object" },
-    temperature: 0.4,
-  });
-
-  const content = response.choices[0]?.message?.content;
-  if (!content) throw new Error("Empty LLM response");
-
-  const parsed = JSON.parse(content) as unknown;
+  const parsed = await requestJsonCompletionWithStreaming(client, prompt, options);
   return sanitizeOverallInsight(parsed, weakSpots);
 }

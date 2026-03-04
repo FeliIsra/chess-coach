@@ -9,6 +9,21 @@ import {
 import { AnalysisProgress, ChessGame, GameAnalysis, LLMInsight } from "@/lib/types";
 
 const STOCKFISH_CONCURRENCY = 3;
+const LLM_CONCURRENCY = 4;
+const LLM_PROGRESS_EMIT_INTERVAL_MS = 700;
+const ESTIMATED_LLM_RESPONSE_CHARS = 900;
+
+function estimateLlmProgressPercent(
+  completed: number,
+  total: number,
+  streamedChars: number
+): number {
+  if (total <= 0) return 0;
+  const completedRatio = completed / total;
+  const partialRatio =
+    Math.min(1, streamedChars / ESTIMATED_LLM_RESPONSE_CHARS) / total;
+  return Math.round(Math.min(1, completedRatio + partialRatio) * 100);
+}
 
 export async function POST(request: NextRequest) {
   const { games } = (await request.json()) as {
@@ -97,7 +112,7 @@ export async function POST(request: NextRequest) {
 
         await Promise.all(workers);
 
-        // Phase 2: LLM analysis — all in parallel
+        // Phase 2: LLM analysis — streaming with limited concurrency
         send({
           type: "llm_analysis",
           phase: "llm",
@@ -108,24 +123,85 @@ export async function POST(request: NextRequest) {
         });
 
         let llmCompleted = 0;
-        const allInsights: LLMInsight[] = await Promise.all(
-          allAnalyses.map(async (analysis, i) => {
-            const insight = await analyzeGameWithLLM(openai, analysis);
-            llmCompleted++;
-            send({
-              type: "llm_analysis",
-              phase: "llm",
-              gameIndex: i,
-              totalGames: allAnalyses.length,
-              gamesCompleted: llmCompleted,
-              phaseProgressPercent: Math.round(
-                (llmCompleted / allAnalyses.length) * 100
-              ),
-              message: `AI review complete for ${llmCompleted} of ${allAnalyses.length} games`,
-            });
-            return insight;
-          })
-        );
+        let llmProgressPercent = 0;
+        const allInsights: LLMInsight[] = new Array(allAnalyses.length);
+        const llmQueue = allAnalyses.map((_, i) => i);
+
+        const llmWorkers: Promise<void>[] = [];
+        const totalLlmGames = allAnalyses.length;
+
+        const emitLlmProgress = (progress: Omit<AnalysisProgress, "type" | "phase">) => {
+          const requestedPercent = Math.max(
+            0,
+            Math.min(100, progress.phaseProgressPercent ?? llmProgressPercent)
+          );
+          llmProgressPercent = Math.max(llmProgressPercent, requestedPercent);
+          send({
+            type: "llm_analysis",
+            phase: "llm",
+            totalGames: totalLlmGames,
+            ...progress,
+            phaseProgressPercent: llmProgressPercent,
+          });
+        };
+
+        const runLlmForGame = async (i: number) => {
+          let streamedChars = 0;
+          let lastEmitAt = 0;
+
+          emitLlmProgress({
+            gameIndex: i,
+            activeGameIndex: i,
+            gamesCompleted: llmCompleted,
+            phaseProgressPercent: llmProgressPercent,
+            message: `AI reviewing game ${i + 1} of ${totalLlmGames}...`,
+          });
+
+          const insight = await analyzeGameWithLLM(openai, allAnalyses[i], {
+            onDelta: (delta) => {
+              streamedChars += delta.length;
+              const now = Date.now();
+              if (now - lastEmitAt < LLM_PROGRESS_EMIT_INTERVAL_MS) return;
+              lastEmitAt = now;
+
+              emitLlmProgress({
+                gameIndex: i,
+                activeGameIndex: i,
+                gamesCompleted: llmCompleted,
+                phaseProgressPercent: estimateLlmProgressPercent(
+                  llmCompleted,
+                  totalLlmGames,
+                  streamedChars
+                ),
+                message: `AI reviewing game ${i + 1} of ${totalLlmGames}...`,
+              });
+            },
+          });
+
+          allInsights[i] = insight;
+          llmCompleted++;
+
+          emitLlmProgress({
+            gameIndex: i,
+            gamesCompleted: llmCompleted,
+            phaseProgressPercent: Math.round((llmCompleted / totalLlmGames) * 100),
+            message: `AI review complete for ${llmCompleted} of ${totalLlmGames} games`,
+          });
+        };
+
+        for (let w = 0; w < Math.min(LLM_CONCURRENCY, totalLlmGames); w++) {
+          llmWorkers.push(
+            (async () => {
+              while (llmQueue.length > 0) {
+                const idx = llmQueue.shift();
+                if (idx === undefined) break;
+                await runLlmForGame(idx);
+              }
+            })()
+          );
+        }
+
+        await Promise.all(llmWorkers);
 
         // Phase 3: Overall insight
         send({

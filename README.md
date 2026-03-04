@@ -22,6 +22,18 @@ This applies the migration that creates the `analysis_sessions` table used by `/
 History visibility is isolated by a hashed viewer key derived from the incoming IP address.
 Set `HISTORY_VIEWER_SALT` in production to avoid predictable hashes.
 
+## Product Feedback Agents
+
+Reusable product-focused agent prompts are available under `agents/product/`.
+
+- `agents/product/product-strategist.md`
+- `agents/product/ux-research-analyst.md`
+- `agents/product/growth-retention-pm.md`
+- `agents/product/ux-copy-content-designer.md`
+- `agents/product/roadmap-prioritization-pm.md`
+
+Use `agents/product/README.md` as the starting point and run them as a panel when making roadmap or UX decisions.
+
 ## Getting Started
 
 First, run the development server:
