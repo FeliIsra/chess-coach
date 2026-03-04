@@ -1,4 +1,22 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Environment
+
+Set these variables before running the app:
+
+```bash
+OPENAI_API_KEY=...
+SUPABASE_URL=...
+SUPABASE_SERVICE_ROLE_KEY=...
+```
+
+## Supabase
+
+Hosted persistence is defined under `supabase/`.
+
+```bash
+npx supabase db push
+```
+
+This applies the migration that creates the `analysis_sessions` table used by `/api/history`.
 
 ## Getting Started
 

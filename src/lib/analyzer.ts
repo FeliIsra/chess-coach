@@ -53,10 +53,7 @@ function parseClockTimes(pgn: string): Map<number, number> {
   const clockMap = new Map<number, number>();
   // Remove headers
   const moveSection = pgn.replace(/\[.*?\]\s*/g, "").trim();
-  const clockRegex = /\{\[%clk (\d+):(\d+):(\d+(?:\.\d+)?)\]\}/g;
-  let match: RegExpExecArray | null;
   let halfMoveIndex = 0;
-  let lastIndex = 0;
 
   // Count moves between clock annotations to track half-move index
   const tokens = moveSection.split(/(\{\[%clk [^\]]+\]\})/);
@@ -79,12 +76,6 @@ function parseClockTimes(pgn: string): Map<number, number> {
   return clockMap;
 }
 
-function getInitialTimeSeconds(pgn: string): number | null {
-  const tcMatch = pgn.match(/\[TimeControl "(\d+)(?:\+\d+)?"\]/);
-  if (!tcMatch) return null;
-  return parseInt(tcMatch[1]);
-}
-
 function isRecapture(
   history: { captured?: string; to: string }[],
   index: number
@@ -105,7 +96,6 @@ export async function analyzeGame(
 
   const history = chess.history({ verbose: true });
   const clockTimes = parseClockTimes(game.pgn);
-  const initialTime = getInitialTimeSeconds(game.pgn);
   const userMoves: { move: (typeof history)[0]; index: number }[] = [];
 
   for (let i = 0; i < history.length; i++) {

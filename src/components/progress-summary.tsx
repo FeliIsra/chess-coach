@@ -8,7 +8,21 @@ export default function ProgressSummary() {
   const [sessions, setSessions] = useState<AnalysisSession[]>([]);
 
   useEffect(() => {
-    setSessions(loadHistory());
+    let cancelled = false;
+
+    void loadHistory()
+      .then((history) => {
+        if (!cancelled) {
+          setSessions(history);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load progress summary", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (sessions.length === 0) return null;

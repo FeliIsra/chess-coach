@@ -23,7 +23,7 @@ export function extractPuzzles(
   games: { moves: MoveAnalysis[]; game: { userColor: "white" | "black" } }[]
 ): Puzzle[] {
   const puzzles: Puzzle[] = [];
-  for (const { moves, game } of games) {
+  for (const { moves } of games) {
     for (const move of moves) {
       if (
         (move.classification === "blunder" || move.classification === "mistake") &&

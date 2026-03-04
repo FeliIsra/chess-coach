@@ -1,0 +1,96 @@
+import { NextRequest, NextResponse } from "next/server";
+import { buildAnalysisSession } from "@/lib/analysis-session";
+import { FullAnalysisResult, AnalysisSession } from "@/lib/types";
+import { getSupabaseAdminClient } from "@/lib/supabase/server";
+
+type AnalysisSessionRow = {
+  created_at: string;
+  username: string;
+  games_count: number;
+  total_blunders: number;
+  total_mistakes: number;
+  average_accuracy: number;
+  avg_blunders_per_game: number;
+};
+
+function mapRowToSession(row: AnalysisSessionRow): AnalysisSession {
+  return {
+    date: row.created_at,
+    username: row.username,
+    gamesCount: row.games_count,
+    totalBlunders: row.total_blunders,
+    totalMistakes: row.total_mistakes,
+    averageAccuracy: row.average_accuracy,
+    avgBlundersPerGame: row.avg_blunders_per_game,
+  };
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = request.nextUrl;
+    const username = searchParams.get("username");
+    const supabase = getSupabaseAdminClient();
+
+    let query = supabase
+      .from("analysis_sessions")
+      .select(
+        "created_at, username, games_count, total_blunders, total_mistakes, average_accuracy, avg_blunders_per_game"
+      )
+      .order("created_at", { ascending: true })
+      .limit(50);
+
+    if (username) {
+      query = query.ilike("username", username.trim());
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    return NextResponse.json({
+      sessions: (data ?? []).map(mapRowToSession),
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to load history";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { username, result } = (await request.json()) as {
+      username?: string;
+      result?: FullAnalysisResult;
+    };
+
+    if (!username?.trim() || !result) {
+      return NextResponse.json(
+        { error: "Username and result are required" },
+        { status: 400 }
+      );
+    }
+
+    const session = buildAnalysisSession(username.trim(), result);
+    const supabase = getSupabaseAdminClient();
+    const { error } = await supabase.from("analysis_sessions").insert({
+      created_at: session.date,
+      username: session.username,
+      games_count: session.gamesCount,
+      total_blunders: session.totalBlunders,
+      total_mistakes: session.totalMistakes,
+      average_accuracy: session.averageAccuracy,
+      avg_blunders_per_game: session.avgBlundersPerGame,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to save history";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

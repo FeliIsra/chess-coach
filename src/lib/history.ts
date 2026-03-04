@@ -1,40 +1,39 @@
 import { AnalysisSession, FullAnalysisResult } from "./types";
 
-const STORAGE_KEY = "chess-coach-history";
-
 export function saveSession(
   username: string,
   result: FullAnalysisResult
-): void {
-  const session: AnalysisSession = {
-    date: new Date().toISOString(),
-    username,
-    gamesCount: result.games.length,
-    totalBlunders: result.overallSummary.totalBlunders,
-    totalMistakes: result.overallSummary.totalMistakes,
-    averageAccuracy: result.overallSummary.averageAccuracy,
-    avgBlundersPerGame:
-      result.games.length > 0
-        ? result.overallSummary.totalBlunders / result.games.length
-        : 0,
-  };
-
-  const history = loadHistory();
-  history.push(session);
-  // Keep last 50 sessions
-  if (history.length > 50) history.splice(0, history.length - 50);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+): Promise<void> {
+  return fetch("/api/history", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, result }),
+  }).then(async (response) => {
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      throw new Error(data?.error || "Failed to save session");
+    }
+  });
 }
 
-export function loadHistory(): AnalysisSession[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as AnalysisSession[];
-  } catch {
-    return [];
+export async function loadHistory(username?: string): Promise<AnalysisSession[]> {
+  const search = username ? `?username=${encodeURIComponent(username)}` : "";
+  const response = await fetch(`/api/history${search}`, {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as
+      | { error?: string }
+      | null;
+    throw new Error(data?.error || "Failed to load history");
   }
+
+  const data = (await response.json()) as { sessions?: AnalysisSession[] };
+  return data.sessions ?? [];
 }
 
 export function getTrend(

@@ -92,7 +92,9 @@ export default function Home() {
               setResult(fullResult);
               setStage("done");
               setCurrentPhase("done");
-              saveSession(username, fullResult);
+              void saveSession(username, fullResult).catch((saveError) => {
+                console.error("Failed to save analysis session", saveError);
+              });
             } else {
               setProgress(update.message);
 
