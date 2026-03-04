@@ -97,16 +97,18 @@ export async function POST(request: NextRequest) {
           message: `AI coach reviewing ${allAnalyses.length} games...`,
         });
 
+        let llmCompleted = 0;
         const allInsights: LLMInsight[] = await Promise.all(
           allAnalyses.map(async (analysis, i) => {
             const insight = await analyzeGameWithLLM(openai, analysis);
+            llmCompleted++;
             send({
               type: "llm_analysis",
               phase: "llm",
               gameIndex: i,
               totalGames: allAnalyses.length,
-              gamesCompleted: i + 1,
-              message: `AI review complete for game ${i + 1}/${allAnalyses.length}`,
+              gamesCompleted: llmCompleted,
+              message: `AI review complete for ${llmCompleted} of ${allAnalyses.length} games`,
             });
             return insight;
           })

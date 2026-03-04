@@ -4,9 +4,8 @@ interface ProgressBarProps {
   currentPhase: "fetching" | "stockfish" | "llm" | "overall" | "done";
   gamesCompleted: number;
   totalGames: number;
-  moveIndex?: number;
-  totalMoves?: number;
   message: string;
+  lastCompletedMessage?: string;
 }
 
 const steps = [
@@ -30,11 +29,12 @@ export default function ProgressBar({
   currentPhase,
   gamesCompleted,
   totalGames,
-  moveIndex,
-  totalMoves,
   message,
+  lastCompletedMessage,
 }: ProgressBarProps) {
   const activeIdx = getStepIndex(currentPhase);
+  const stockfishProgress =
+    totalGames > 0 ? Math.min(100, Math.round((gamesCompleted / totalGames) * 100)) : 0;
 
   return (
     <div className="w-full space-y-4">
@@ -89,16 +89,15 @@ export default function ProgressBar({
         <div className="bg-surface-1 rounded-lg p-3 border border-border">
           <div className="flex justify-between text-xs text-muted mb-1.5">
             <span>
-              Game {Math.min(gamesCompleted + 1, totalGames)}/{totalGames}
-              {moveIndex && totalMoves ? ` — move ${moveIndex}/${totalMoves}` : ""}
+              Completed {gamesCompleted} of {totalGames} games
             </span>
-            <span>{Math.round((gamesCompleted / totalGames) * 100)}%</span>
+            <span>{stockfishProgress}%</span>
           </div>
           <div className="w-full h-1.5 bg-surface-3 rounded-full overflow-hidden">
             <div
               className="h-full bg-primary rounded-full transition-all duration-300"
               style={{
-                width: `${((gamesCompleted + (moveIndex && totalMoves ? moveIndex / totalMoves : 0)) / totalGames) * 100}%`,
+                width: `${stockfishProgress}%`,
               }}
             />
           </div>
@@ -110,6 +109,12 @@ export default function ProgressBar({
         <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
         <p className="text-sm text-muted">{message}</p>
       </div>
+
+      {lastCompletedMessage && currentPhase !== "done" && (
+        <p className="text-xs text-foreground/70 bg-surface-2 rounded-lg border border-border px-3 py-2">
+          Latest completed game: {lastCompletedMessage}
+        </p>
+      )}
     </div>
   );
 }

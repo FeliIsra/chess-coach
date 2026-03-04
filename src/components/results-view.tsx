@@ -5,7 +5,8 @@ import { FullAnalysisResult, GameAnalysis, LLMInsight } from "@/lib/types";
 import WinRateChart from "./win-rate-chart";
 import EvalChart from "./eval-chart";
 import ChessBoardViewer from "./chess-board-viewer";
-import PuzzleTrainer, { extractPuzzles } from "./puzzle-trainer";
+import PuzzleTrainer, { extractPuzzles, Puzzle } from "./puzzle-trainer";
+import { sanitizeOpeningName } from "@/lib/chess-format";
 
 interface Props {
   result: FullAnalysisResult;
@@ -15,10 +16,19 @@ interface Props {
 export default function ResultsView({ result, onReset }: Props) {
   const [expandedGame, setExpandedGame] = useState<number | null>(null);
   const [showPuzzles, setShowPuzzles] = useState(false);
+  const [activePuzzleIds, setActivePuzzleIds] = useState<string[] | null>(null);
+  const [initialPuzzleIndex, setInitialPuzzleIndex] = useState(0);
   const { overallSummary, overallInsight, games, llmInsights, weakSpots } = result;
 
-  const puzzles = useMemo(() => extractPuzzles(games), [games]);
+  const puzzles = useMemo(() => extractPuzzles(games, llmInsights), [games, llmInsights]);
   const primaryUserColor = games[0]?.game.userColor ?? "white";
+  const focusAreas = overallInsight?.topWeaknesses?.slice(0, 3) ?? [];
+  const nextSteps = overallInsight?.studyPlan?.slice(0, 3) ?? [];
+  const visiblePuzzles = useMemo(() => {
+    if (!activePuzzleIds) return puzzles;
+    const allowed = new Set(activePuzzleIds);
+    return puzzles.filter((puzzle) => allowed.has(puzzle.id));
+  }, [activePuzzleIds, puzzles]);
 
   // Opening repertoire stats
   const openingStats = useMemo(() => {
@@ -27,7 +37,7 @@ export default function ResultsView({ result, onReset }: Props) {
       { wins: number; losses: number; draws: number; blunders: number; count: number }
     >();
     for (const { game, blunders } of games) {
-      const name = game.openingName;
+      const name = sanitizeOpeningName(game.openingName);
       const entry = map.get(name) ?? { wins: 0, losses: 0, draws: 0, blunders: 0, count: 0 };
       entry.count++;
       if (game.result === "win") entry.wins++;
@@ -41,12 +51,34 @@ export default function ResultsView({ result, onReset }: Props) {
       .slice(0, 5);
   }, [games]);
 
-  if (showPuzzles && puzzles.length > 0) {
+  const openAllPuzzles = () => {
+    setActivePuzzleIds(null);
+    setInitialPuzzleIndex(0);
+    setShowPuzzles(true);
+  };
+
+  const openCategoryPuzzles = (category: string) => {
+    const matching = puzzles.filter((puzzle) => puzzle.category === category);
+    if (matching.length === 0) return;
+    setActivePuzzleIds(matching.map((puzzle) => puzzle.id));
+    setInitialPuzzleIndex(0);
+    setShowPuzzles(true);
+  };
+
+  const openSpecificPuzzle = (puzzle: Puzzle) => {
+    setActivePuzzleIds([puzzle.id]);
+    setInitialPuzzleIndex(0);
+    setShowPuzzles(true);
+  };
+
+  if (showPuzzles && visiblePuzzles.length > 0) {
     return (
       <main className="min-h-screen px-4 py-6 max-w-lg mx-auto">
         <PuzzleTrainer
-          puzzles={puzzles}
+          key={`${activePuzzleIds?.join(",") ?? "all"}:${initialPuzzleIndex}`}
+          puzzles={visiblePuzzles}
           userColor={primaryUserColor}
+          initialIndex={Math.min(initialPuzzleIndex, Math.max(visiblePuzzles.length - 1, 0))}
           onClose={() => setShowPuzzles(false)}
         />
       </main>
@@ -83,7 +115,7 @@ export default function ResultsView({ result, onReset }: Props) {
             <StatCard label="Blunders" value={overallSummary.totalBlunders} color="text-accent-red" />
             <StatCard label="Mistakes" value={overallSummary.totalMistakes} color="text-accent-amber" />
             {overallSummary.averageAccuracy > 0 && (
-              <StatCard label="Avg Accuracy" value={`${overallSummary.averageAccuracy.toFixed(0)}%`} color="text-accent-blue" />
+              <StatCard label="Average Accuracy" value={`${overallSummary.averageAccuracy.toFixed(0)}%`} color="text-accent-blue" />
             )}
           </div>
         </div>
@@ -95,89 +127,80 @@ export default function ResultsView({ result, onReset }: Props) {
               <span className="font-semibold text-accent-amber">
                 {overallSummary.timePressureBlunderPercent}%
               </span>{" "}
-              of your blunders were under time pressure
+              of your errors happened under time pressure
             </p>
             {overallSummary.timePressureBlunderPercent > 50 && (
               <p className="text-xs text-muted mt-1">
-                Try to manage your clock better in the middlegame
+                Clock management is a real leak in these games.
               </p>
             )}
           </div>
         )}
       </div>
 
-      {/* Practice button */}
-      {puzzles.length > 0 && (
-        <button
-          onClick={() => setShowPuzzles(true)}
-          className="w-full mb-6 py-3 bg-accent-amber/10 hover:bg-accent-amber/20 border border-accent-amber/30 text-accent-amber font-semibold rounded-xl transition-colors text-sm"
-        >
-          Practice Your Mistakes ({puzzles.length} puzzles)
-        </button>
-      )}
-
-      {/* AI Overall Summary */}
       {overallInsight && (
         <section className="mb-6">
-          <h2 className="text-lg font-bold text-foreground mb-3">
-            AI Coach Summary
-          </h2>
+          <h2 className="text-lg font-bold text-foreground mb-3">What To Fix First</h2>
           <div className="bg-surface-1 rounded-2xl border border-border p-4 space-y-4">
             <p className="text-sm text-foreground/80 leading-relaxed">
               {overallInsight.summary}
             </p>
 
+            {focusAreas.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-accent-red mb-2">
+                  Top recurring problems
+                </h3>
+                <ul className="space-y-2">
+                  {focusAreas.map((weakness, i) => (
+                    <li key={i} className="text-sm text-foreground/75 flex gap-2">
+                      <span className="text-accent-red shrink-0">{i + 1}.</span>
+                      {weakness}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {overallInsight.topStrengths?.length > 0 && (
               <div>
-                <h3 className="text-sm font-semibold text-accent-green mb-1">
-                  Your Strengths
+                <h3 className="text-sm font-semibold text-accent-green mb-2">
+                  Keep doing this
                 </h3>
-                <ul className="space-y-1">
-                  {overallInsight.topStrengths.map((s, i) => (
-                    <li key={i} className="text-sm text-foreground/70 flex gap-2">
+                <ul className="space-y-2">
+                  {overallInsight.topStrengths.slice(0, 3).map((strength, i) => (
+                    <li key={i} className="text-sm text-foreground/75 flex gap-2">
                       <span className="text-accent-green shrink-0">+</span>
-                      {s}
+                      {strength}
                     </li>
                   ))}
                 </ul>
               </div>
             )}
 
-            {overallInsight.topWeaknesses?.length > 0 && (
+            {nextSteps.length > 0 && (
               <div>
-                <h3 className="text-sm font-semibold text-accent-red mb-1">
-                  Areas to Improve
+                <h3 className="text-sm font-semibold text-accent-blue mb-2">
+                  Next training block
                 </h3>
-                <ul className="space-y-1">
-                  {overallInsight.topWeaknesses.map((w, i) => (
-                    <li key={i} className="text-sm text-foreground/70 flex gap-2">
-                      <span className="text-accent-red shrink-0">!</span>
-                      {w}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {overallInsight.studyPlan?.length > 0 && (
-              <div>
-                <h3 className="text-sm font-semibold text-accent-blue mb-1">
-                  Study Plan
-                </h3>
-                <ol className="space-y-1">
-                  {overallInsight.studyPlan.map((step, i) => (
-                    <li
-                      key={i}
-                      className="text-sm text-foreground/70 flex gap-2"
-                    >
-                      <span className="text-accent-blue font-mono shrink-0">
-                        {i + 1}.
-                      </span>
-                      {step}
+                <ol className="space-y-2">
+                  {nextSteps.map((step, i) => (
+                    <li key={i} className="text-sm text-foreground/75 flex gap-2">
+                      <span className="text-accent-blue shrink-0">{i + 1}.</span>
+                      {step.replace(/^\d+\.\s*/, "")}
                     </li>
                   ))}
                 </ol>
               </div>
+            )}
+
+            {puzzles.length > 0 && (
+              <button
+                onClick={openAllPuzzles}
+                className="w-full py-3 bg-accent-amber/10 hover:bg-accent-amber/20 border border-accent-amber/30 text-accent-amber font-semibold rounded-xl transition-colors text-sm"
+              >
+                Start With {Math.min(5, puzzles.length)} mistake puzzle{puzzles.length === 1 ? "" : "s"}
+              </button>
             )}
           </div>
         </section>
@@ -187,7 +210,7 @@ export default function ResultsView({ result, onReset }: Props) {
       {weakSpots && weakSpots.length > 0 && (
         <section className="mb-6">
           <h2 className="text-lg font-bold text-foreground mb-3">
-            Your Weak Spots
+            Train By Theme
           </h2>
           <div className="flex flex-wrap gap-2">
             {weakSpots.map((spot, i) => (
@@ -205,6 +228,14 @@ export default function ResultsView({ result, onReset }: Props) {
                 </div>
                 {spot.tip && (
                   <p className="text-xs text-muted mt-1">{spot.tip}</p>
+                )}
+                {puzzles.some((puzzle) => puzzle.category === spot.category) && (
+                  <button
+                    onClick={() => openCategoryPuzzles(spot.category)}
+                    className="mt-2 text-xs text-primary hover:text-primary-hover font-medium"
+                  >
+                    Practice this theme
+                  </button>
                 )}
               </div>
             ))}
@@ -237,7 +268,7 @@ export default function ResultsView({ result, onReset }: Props) {
                     <p className="text-xs text-muted">
                       {stats.count} game{stats.count > 1 ? "s" : ""}
                       {" \u00B7 "}
-                      {(stats.blunders / stats.count).toFixed(1)} avg blunders
+                      {(stats.blunders / stats.count).toFixed(1)} blunders/game
                     </p>
                   </div>
                   <p className={`text-sm font-mono font-semibold ${rateColor} shrink-0 ml-3`}>
@@ -262,6 +293,8 @@ export default function ResultsView({ result, onReset }: Props) {
               index={i}
               analysis={analysis}
               insight={llmInsights[i]}
+              practicePuzzles={puzzles.filter((puzzle) => puzzle.gameIndex === i)}
+              onPracticePuzzle={openSpecificPuzzle}
               expanded={expandedGame === i}
               onToggle={() =>
                 setExpandedGame(expandedGame === i ? null : i)
@@ -302,14 +335,19 @@ function StatCard({
 }
 
 function GameCard({
+  index,
   analysis,
   insight,
+  practicePuzzles,
+  onPracticePuzzle,
   expanded,
   onToggle,
 }: {
   index: number;
   analysis: GameAnalysis;
   insight?: LLMInsight;
+  practicePuzzles: Puzzle[];
+  onPracticePuzzle: (puzzle: Puzzle) => void;
   expanded: boolean;
   onToggle: () => void;
 }) {
@@ -337,7 +375,7 @@ function GameCard({
             <span className="text-xs text-muted">({game.opponentRating})</span>
           </div>
           <p className="text-xs text-muted truncate">
-            {game.openingName} &middot; {game.timeClass} &middot;{" "}
+            {sanitizeOpeningName(game.openingName)} &middot; {game.timeClass} &middot; {game.userColor} &middot;{" "}
             {game.result.toUpperCase()}
           </p>
         </div>
@@ -345,12 +383,12 @@ function GameCard({
           <div className="flex gap-1.5 text-xs">
             {analysis.blunders > 0 && (
               <span className="bg-accent-red/20 text-accent-red px-1.5 py-0.5 rounded">
-                {analysis.blunders}B
+                {analysis.blunders} blunder{analysis.blunders === 1 ? "" : "s"}
               </span>
             )}
             {analysis.mistakes > 0 && (
               <span className="bg-accent-amber/20 text-accent-amber px-1.5 py-0.5 rounded">
-                {analysis.mistakes}M
+                {analysis.mistakes} mistake{analysis.mistakes === 1 ? "" : "s"}
               </span>
             )}
           </div>
@@ -374,6 +412,15 @@ function GameCard({
                 {insight.summary}
               </p>
 
+              {practicePuzzles.length > 0 && (
+                <button
+                  onClick={() => onPracticePuzzle(practicePuzzles[0])}
+                  className="w-full py-2.5 bg-accent-amber/10 hover:bg-accent-amber/20 border border-accent-amber/30 text-accent-amber font-semibold rounded-xl transition-colors text-sm"
+                >
+                  Practice the first critical mistake from this game
+                </button>
+              )}
+
               {/* Worst moves */}
               {insight.worstMovesAnalysis?.length > 0 && (
                 <div>
@@ -393,6 +440,19 @@ function GameCard({
                         <p className="text-xs text-accent-red/70 mt-1 font-medium">
                           Concept: {m.concept}
                         </p>
+                        {(() => {
+                          const matchingPuzzle = practicePuzzles.find(
+                            (puzzle) => puzzle.gameIndex === index && puzzle.moveNumber === m.moveNumber
+                          );
+                          return matchingPuzzle ? (
+                            <button
+                              onClick={() => onPracticePuzzle(matchingPuzzle)}
+                              className="mt-2 text-xs text-primary hover:text-primary-hover font-medium"
+                            >
+                              Practice this position
+                            </button>
+                          ) : null;
+                        })()}
                       </div>
                     ))}
                   </div>

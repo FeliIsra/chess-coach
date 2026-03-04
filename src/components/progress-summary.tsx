@@ -73,7 +73,7 @@ export default function ProgressSummary() {
               sessions.length
             ).toFixed(1)}
           </p>
-          <p className="text-xs text-muted">Avg Blunders/Game</p>
+          <p className="text-xs text-muted">Average Blunders/Game</p>
         </div>
       </div>
 
@@ -96,7 +96,9 @@ export default function ProgressSummary() {
           })}
         </div>
       )}
-      <p className="text-xs text-muted mt-1">Blunders per game (last {recent.length} sessions)</p>
+      <p className="text-xs text-muted mt-1">
+        Average blunders per game over the last {recent.length} session{recent.length === 1 ? "" : "s"}
+      </p>
     </div>
   );
 }

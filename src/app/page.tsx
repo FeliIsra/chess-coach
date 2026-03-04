@@ -21,7 +21,7 @@ export default function Home() {
   const [currentPhase, setCurrentPhase] = useState<"fetching" | "stockfish" | "llm" | "overall" | "done">("fetching");
   const [gamesCompleted, setGamesCompleted] = useState(0);
   const [totalGames, setTotalGames] = useState(0);
-  const [moveProgress, setMoveProgress] = useState<{ index: number; total: number } | undefined>();
+  const [lastCompletedMessage, setLastCompletedMessage] = useState<string>("");
 
   const handleAnalyze = async () => {
     if (!username.trim()) return;
@@ -32,7 +32,7 @@ export default function Home() {
     setCurrentPhase("fetching");
     setGamesCompleted(0);
     setTotalGames(0);
-    setMoveProgress(undefined);
+    setLastCompletedMessage("");
 
     try {
       const gamesRes = await fetch(
@@ -52,7 +52,7 @@ export default function Home() {
       setStage("analyzing");
       setTotalGames(games.length);
       setCurrentPhase("stockfish");
-      setProgress(`Analyzing ${games.length} games...`);
+      setProgress("Starting engine analysis...");
 
       const analyzeRes = await fetch("/api/analyze", {
         method: "POST",
@@ -92,12 +92,11 @@ export default function Home() {
               setResult(fullResult);
               setStage("done");
               setCurrentPhase("done");
+              setProgress("Analysis complete.");
               void saveSession(username, fullResult).catch((saveError) => {
                 console.error("Failed to save analysis session", saveError);
               });
             } else {
-              setProgress(update.message);
-
               if (update.phase) {
                 setCurrentPhase(update.phase);
               }
@@ -107,10 +106,24 @@ export default function Home() {
               if (update.totalGames) {
                 setTotalGames(update.totalGames);
               }
-              if (update.moveIndex && update.totalMoves) {
-                setMoveProgress({ index: update.moveIndex, total: update.totalMoves });
-              } else {
-                setMoveProgress(undefined);
+              if (update.type === "game_complete") {
+                setLastCompletedMessage(update.message);
+              }
+
+              if (update.phase === "stockfish") {
+                setProgress(
+                  update.gamesCompleted && update.totalGames
+                    ? `Engine analyzing your games. Completed ${update.gamesCompleted} of ${update.totalGames}.`
+                    : "Engine analyzing your games..."
+                );
+              } else if (update.phase === "llm") {
+                setProgress(
+                  update.gamesCompleted && update.totalGames
+                    ? `AI coach reviewing patterns. Completed ${update.gamesCompleted} of ${update.totalGames}.`
+                    : "AI coach reviewing your games..."
+                );
+              } else if (update.phase === "overall") {
+                setProgress("Building your study plan...");
               }
             }
           } catch (e) {
@@ -133,7 +146,7 @@ export default function Home() {
     setCurrentPhase("fetching");
     setGamesCompleted(0);
     setTotalGames(0);
-    setMoveProgress(undefined);
+    setLastCompletedMessage("");
   };
 
   if (stage === "done" && result) {
@@ -210,9 +223,8 @@ export default function Home() {
             currentPhase={currentPhase}
             gamesCompleted={gamesCompleted}
             totalGames={totalGames}
-            moveIndex={moveProgress?.index}
-            totalMoves={moveProgress?.total}
             message={progress}
+            lastCompletedMessage={lastCompletedMessage}
           />
         )}
 

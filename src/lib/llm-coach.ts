@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { GameAnalysis, LLMInsight, WeakSpot } from "./types";
+import { sanitizeOpeningName } from "./chess-format";
 
 export function createOpenAIClient() {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -25,16 +26,25 @@ export async function analyzeGameWithLLM(
   analysis: GameAnalysis
 ): Promise<LLMInsight> {
   const { game, bestMoves, worstMoves } = analysis;
+  const reviewMoves = worstMoves.filter((move) => move.classification !== "good").slice(0, 6);
+  const highlightMoves = bestMoves
+    .filter(
+      (move) =>
+        move.classification === "brilliant" ||
+        move.classification === "great" ||
+        move.evalDiff >= 15
+    )
+    .slice(0, 4);
 
-  const prompt = `You are a friendly chess coach for beginner/intermediate players (rating ~${game.userRating}).
+  const prompt = `You are a precise chess coach for beginner/intermediate players (rating ~${game.userRating}).
 Analyze this ${game.timeClass} game where the player played as ${game.userColor} against ${game.opponentName} (${game.opponentRating}).
-Result: ${game.result}. Opening: ${game.openingName}.
+Result: ${game.result}. Opening: ${sanitizeOpeningName(game.openingName)}.
 
 ## WORST MOVES (biggest mistakes):
-${worstMoves.map((m, i) => `\n### Mistake ${i + 1}\n${formatMoveContext(m)}`).join("\n")}
+${reviewMoves.map((m, i) => `\n### Mistake ${i + 1}\n${formatMoveContext(m)}`).join("\n")}
 
 ## BEST MOVES (strongest plays):
-${bestMoves.map((m, i) => `\n### Highlight ${i + 1}\n${formatMoveContext(m)}`).join("\n")}
+${highlightMoves.map((m, i) => `\n### Highlight ${i + 1}\n${formatMoveContext(m)}`).join("\n")}
 
 Respond in JSON format with this exact structure:
 {
@@ -62,11 +72,13 @@ Respond in JSON format with this exact structure:
 }
 
 Rules:
-- Be encouraging and friendly, like a supportive coach
+- Be calm, direct, and helpful. Do not use hype.
 - Use simple language, avoid complex chess jargon unless you explain it
 - Reference SPECIFIC moves and positions, not generic advice
-- For each bad move, explain what the player likely THOUGHT vs what actually happens
-- For each good move, reinforce the pattern so the player repeats it
+- For each bad move, explain the concrete consequence of the move and the better alternative
+- Do not guess the player's intention with phrases like "you probably thought" unless the position makes it obvious
+- Do not praise neutral or defensive moves as "excellent" unless the evaluation swing clearly supports it
+- For each good move, reinforce the exact pattern so the player repeats it
 - The improvement plan should be SPECIFIC to this game, not generic`;
 
   const response = await client.chat.completions.create({
@@ -110,7 +122,7 @@ export async function generateOverallInsight(
 }> {
   const gamesSummary = analyses.map((a, i) => {
     const g = a.game;
-    return `Game ${i + 1}: ${g.result} as ${g.userColor} vs ${g.opponentName} (${g.opponentRating}) - ${g.openingName} - ${a.blunders} blunders, ${a.mistakes} mistakes`;
+    return `Game ${i + 1}: ${g.result} as ${g.userColor} vs ${g.opponentName} (${g.opponentRating}) - ${sanitizeOpeningName(g.openingName)} - ${a.blunders} blunders, ${a.mistakes} mistakes`;
   });
 
   const allStrengths = insights.flatMap((i) => i.strengths);
@@ -120,7 +132,7 @@ export async function generateOverallInsight(
     ? `\n## Tactical Weak Spots (by error frequency):\n${weakSpots.map((ws) => `- ${ws.category}: ${ws.count} errors`).join("\n")}`
     : "";
 
-  const prompt = `You are a friendly chess coach. Based on the analysis of ${analyses.length} recent games, provide an overall assessment.
+  const prompt = `You are a precise chess coach. Based on the analysis of ${analyses.length} recent games, provide an overall assessment.
 
 ## Games Summary:
 ${gamesSummary.join("\n")}
@@ -139,7 +151,7 @@ ${weakSpotsText}
 
 Respond in JSON:
 {
-  "summary": "3-4 sentence overall assessment. Be encouraging but honest.",
+  "summary": "3-4 sentence overall assessment. Be honest and practical.",
   "topStrengths": ["Top 3 recurring strengths"],
   "topWeaknesses": ["Top 3 recurring weaknesses to work on"],
   "studyPlan": ["5 specific, ordered study recommendations. Start with the most impactful."],
@@ -148,7 +160,7 @@ Respond in JSON:
 
 For weakSpotTips, include one entry for each of these categories: ${weakSpots.map((ws) => ws.category).join(", ")}. Each tip should be a specific, actionable one-liner.
 
-Be specific, reference patterns you see across games. Make the study plan actionable with concrete exercises.`;
+Be specific, reference patterns you see across games, and avoid motivational filler. Make the study plan actionable with concrete exercises.`;
 
   const response = await client.chat.completions.create({
     model: "gpt-4o-mini",

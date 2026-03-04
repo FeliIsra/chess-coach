@@ -1,4 +1,5 @@
 import { ChessComGame, ChessGame } from "./types";
+import { sanitizeOpeningName } from "./chess-format";
 
 const BASE_URL = "https://api.chess.com/pub";
 const HEADERS = {
@@ -80,9 +81,7 @@ function toChessGame(raw: ChessComGame, username: string): ChessGame {
 
   // Extract opening from PGN ECOUrl header
   const openingMatch = raw.pgn.match(/\[ECOUrl ".*?\/([^"]+)"\]/);
-  const openingName = openingMatch
-    ? openingMatch[1].replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-    : "Unknown Opening";
+  const openingName = sanitizeOpeningName(openingMatch?.[1]);
 
   // Extract date
   const dateMatch = raw.pgn.match(/\[Date "([^"]+)"\]/);

@@ -32,8 +32,8 @@ export default function WinRateChart({ wins, losses, draws }: WinRateChartProps)
 
   return (
     <div className="flex items-center gap-4">
-      <div className="w-24 h-24 shrink-0">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="w-24 h-24 shrink-0 min-w-[96px]">
+        <ResponsiveContainer width="100%" height="100%" minWidth={96} minHeight={96}>
           <PieChart>
             <Pie
               data={data}

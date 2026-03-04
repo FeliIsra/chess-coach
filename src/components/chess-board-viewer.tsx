@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { Chessboard } from "react-chessboard";
 import { MoveAnalysis } from "@/lib/types";
+import { formatBestMoveLabel } from "@/lib/chess-format";
 
 interface ChessBoardViewerProps {
   moves: MoveAnalysis[];
@@ -146,7 +147,10 @@ export default function ChessBoardViewer({ moves, userColor }: ChessBoardViewerP
       {/* Best move hint */}
       {!showAfter && move.bestMove && move.bestMove !== move.san && (
         <p className="text-xs text-muted">
-          Best move: <span className="text-accent-green font-mono">{move.bestMove}</span>
+          Best move:{" "}
+          <span className="text-accent-green font-mono">
+            {formatBestMoveLabel(move.fen, move.bestMove)}
+          </span>
         </p>
       )}
     </div>
