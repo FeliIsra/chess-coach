@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { buildAnalysisSession } from "@/lib/analysis-session";
 import { FullAnalysisResult, AnalysisSession } from "@/lib/types";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
-import { getHistoryViewerKey } from "@/lib/history-viewer";
+import {
+  fromScopedUsername,
+  getHistoryViewerKey,
+  scopedUsernameLikePattern,
+  toScopedUsername,
+} from "@/lib/history-viewer";
 
 type AnalysisSessionRow = {
   created_at: string;
   username: string;
-  viewer_key: string;
   games_count: number;
   total_blunders: number;
   total_mistakes: number;
@@ -18,7 +22,7 @@ type AnalysisSessionRow = {
 function mapRowToSession(row: AnalysisSessionRow): AnalysisSession {
   return {
     date: row.created_at,
-    username: row.username,
+    username: fromScopedUsername(row.username),
     gamesCount: row.games_count,
     totalBlunders: row.total_blunders,
     totalMistakes: row.total_mistakes,
@@ -34,18 +38,14 @@ export async function GET(request: NextRequest) {
     const viewerKey = getHistoryViewerKey(request);
     const supabase = getSupabaseAdminClient();
 
-    let query = supabase
+    const query = supabase
       .from("analysis_sessions")
       .select(
-        "created_at, username, viewer_key, games_count, total_blunders, total_mistakes, average_accuracy, avg_blunders_per_game"
+        "created_at, username, games_count, total_blunders, total_mistakes, average_accuracy, avg_blunders_per_game"
       )
-      .eq("viewer_key", viewerKey)
+      .like("username", scopedUsernameLikePattern(viewerKey))
       .order("created_at", { ascending: true })
       .limit(50);
-
-    if (username) {
-      query = query.ilike("username", username.trim());
-    }
 
     const { data, error } = await query;
 
@@ -53,8 +53,16 @@ export async function GET(request: NextRequest) {
       throw error;
     }
 
+    let sessions = (data ?? []).map(mapRowToSession);
+    if (username?.trim()) {
+      const normalized = username.trim().toLowerCase();
+      sessions = sessions.filter(
+        (session) => session.username.toLowerCase() === normalized
+      );
+    }
+
     return NextResponse.json({
-      sessions: (data ?? []).map(mapRowToSession),
+      sessions,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to load history";
@@ -81,8 +89,7 @@ export async function POST(request: NextRequest) {
     const supabase = getSupabaseAdminClient();
     const { error } = await supabase.from("analysis_sessions").insert({
       created_at: session.date,
-      username: session.username,
-      viewer_key: viewerKey,
+      username: toScopedUsername(session.username, viewerKey),
       games_count: session.gamesCount,
       total_blunders: session.totalBlunders,
       total_mistakes: session.totalMistakes,

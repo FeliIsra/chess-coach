@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { NextRequest } from "next/server";
 
+const SCOPE_SEPARATOR = "__vk__";
+
 function getFirstHeaderValue(request: NextRequest, headerName: string): string | null {
   const value = request.headers.get(headerName);
   if (!value) return null;
@@ -44,4 +46,18 @@ export function getHistoryViewerKey(request: NextRequest): string {
   return createHash("sha256")
     .update(`${salt}:${identitySource}`)
     .digest("hex");
+}
+
+export function toScopedUsername(username: string, viewerKey: string): string {
+  return `${username.trim()}${SCOPE_SEPARATOR}${viewerKey}`;
+}
+
+export function fromScopedUsername(value: string): string {
+  const separatorIndex = value.lastIndexOf(SCOPE_SEPARATOR);
+  if (separatorIndex === -1) return value;
+  return value.slice(0, separatorIndex);
+}
+
+export function scopedUsernameLikePattern(viewerKey: string): string {
+  return `%${SCOPE_SEPARATOR}${viewerKey}`;
 }
