@@ -7,7 +7,8 @@ import EvalChart from "./eval-chart";
 import ChessBoardViewer from "./chess-board-viewer";
 import PuzzleTrainer, { extractPuzzles, Puzzle } from "./puzzle-trainer";
 import { sanitizeOpeningName } from "@/lib/chess-format";
-import { ENGINE_DEPTH } from "@/lib/analyzer";
+import { generateAnnotatedPGN } from "@/lib/pgn-export";
+import { getConceptLink } from "@/lib/chess-education";
 
 interface Props {
   result: FullAnalysisResult;
@@ -111,12 +112,29 @@ export default function ResultsView({ result, onReset }: Props) {
             )}
           </p>
         </div>
-        <button
-          onClick={onReset}
-          className="text-sm text-primary hover:text-primary-hover font-medium"
-        >
-          New Analysis
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              const pgn = generateAnnotatedPGN(games, llmInsights);
+              const blob = new Blob([pgn], { type: "application/x-chess-pgn" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "chess-coach-analysis.pgn";
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="text-xs text-muted hover:text-foreground border border-border rounded-lg px-2.5 py-1.5 transition-colors"
+          >
+            Export PGN
+          </button>
+          <button
+            onClick={onReset}
+            className="text-sm text-primary hover:text-primary-hover font-medium"
+          >
+            New Analysis
+          </button>
+        </div>
       </div>
 
       {/* Win Rate + Stats Summary */}
@@ -510,7 +528,22 @@ function GameCard({
                         </p>
                         <p className="text-sm text-foreground/80">{m.explanation}</p>
                         <p className="text-xs text-accent-red/70 mt-1 font-medium">
-                          Concept: {m.concept}
+                          Concept:{" "}
+                          {(() => {
+                            const link = getConceptLink(m.concept);
+                            return link ? (
+                              <a
+                                href={link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline hover:text-accent-red transition-colors"
+                              >
+                                {m.concept} &#8599;
+                              </a>
+                            ) : (
+                              m.concept
+                            );
+                          })()}
                         </p>
                         {(() => {
                           const matchingPuzzle = practicePuzzles.find(
@@ -548,7 +581,22 @@ function GameCard({
                         </p>
                         <p className="text-sm text-foreground/80">{m.explanation}</p>
                         <p className="text-xs text-accent-green/70 mt-1 font-medium">
-                          Concept: {m.concept}
+                          Concept:{" "}
+                          {(() => {
+                            const link = getConceptLink(m.concept);
+                            return link ? (
+                              <a
+                                href={link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline hover:text-accent-green transition-colors"
+                              >
+                                {m.concept} &#8599;
+                              </a>
+                            ) : (
+                              m.concept
+                            );
+                          })()}
                         </p>
                       </div>
                     ))}
