@@ -26,14 +26,96 @@ export function sanitizeOpeningName(name?: string): string {
 
   if (!normalized) return "Unknown opening";
 
-  return normalized
+  // Title-case each word
+  const titled = normalized
     .split(" ")
     .map((word) => {
-      if (/^\d+(\.\.\.)?$/.test(word)) return word;
       if (/^[A-Z]{2,}$/.test(word)) return word;
       return word.charAt(0).toUpperCase() + word.slice(1);
     })
     .join(" ");
+
+  // Strip move notation (e.g. "1...E5", "2.Nf3", "3.Bb2", trailing "E5", "O O")
+  const stripped = titled
+    .replace(/\.{2,}\d+\.\S+.*$/g, "")          // "Variation...4.Bg2 ..." (dots glued to digits)
+    .replace(/\s+\d+\.\.\.?\s*\S+/g, "")        // " 2...d6", " 1...E5"
+    .replace(/\s+\d+\.\S+.*$/g, "")             // " 3.Bb2 E5"
+    .replace(/\s+[A-H]\d+$/i, "")               // trailing like " E5"
+    .replace(/\s+O\s+O\s*/gi, "")               // castling "O O"
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!stripped) return "Unknown opening";
+
+  // Keywords that typically end the "main opening" portion of the name
+  const BOUNDARY_KW =
+    /^(Opening|Defense|Defence|Gambit|Game|Attack|System|Counter)$/i;
+
+  const words = stripped.split(" ");
+
+  // Find the index of the first boundary keyword — everything up to and
+  // including it is the main opening name.
+  let boundaryIdx = -1;
+  for (let i = 0; i < words.length; i++) {
+    if (BOUNDARY_KW.test(words[i])) {
+      boundaryIdx = i;
+      break;
+    }
+  }
+
+  let mainOpening: string;
+  let variation: string | undefined;
+
+  if (boundaryIdx >= 0 && boundaryIdx < words.length - 1) {
+    mainOpening = words.slice(0, boundaryIdx + 1).join(" ");
+    const rest = words.slice(boundaryIdx + 1);
+
+    // Extract the first variation name from the remaining words.
+    // Strategy: scan for a "stop" keyword. "Variation" means stop before it.
+    // Other opening-family keywords (Indian, Defense, etc.) mean stop AFTER
+    // them — they are the last word of the variation sub-name.
+    const STOP_BEFORE =
+      /^(Variation)$/i;
+    const STOP_AFTER =
+      /^(Indian|Opening|Defense|Defence|Gambit|Game|Attack|System|Counter)$/i;
+
+    let endIdx = rest.length; // default: take everything
+    for (let i = 0; i < rest.length; i++) {
+      if (STOP_BEFORE.test(rest[i])) {
+        endIdx = i; // exclude the keyword itself
+        break;
+      }
+      if (STOP_AFTER.test(rest[i]) && i > 0) {
+        // Include this keyword, stop after it
+        endIdx = i + 1;
+        break;
+      }
+    }
+
+    // Cap at 3 words to keep names concise
+    const varWords = rest.slice(0, Math.min(endIdx, 3));
+    const cleaned = varWords.join(" ").trim();
+    if (cleaned) variation = cleaned;
+  } else {
+    mainOpening = stripped;
+  }
+
+  let result: string;
+  if (variation) {
+    const hyphenated =
+      variation.includes(" ") ? variation.replace(/\s+/g, "-") : variation;
+    result = `${mainOpening} (${hyphenated})`;
+  } else {
+    result = mainOpening;
+  }
+
+  // Truncate at ~50 chars on a word boundary
+  if (result.length > 50) {
+    const truncated = result.slice(0, 50).replace(/\s+\S*$/, "");
+    result = truncated + "...";
+  }
+
+  return result;
 }
 
 export function formatBestMoveLabel(fen: string, bestMove: string): string {
