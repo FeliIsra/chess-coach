@@ -7,8 +7,7 @@ import EvalChart from "./eval-chart";
 import ChessBoardViewer from "./chess-board-viewer";
 import PuzzleTrainer, { extractPuzzles, Puzzle } from "./puzzle-trainer";
 import { sanitizeOpeningName } from "@/lib/chess-format";
-import Tooltip from "./tooltip";
-import { CHESS_GLOSSARY } from "@/lib/chess-glossary";
+import { ENGINE_DEPTH } from "@/lib/analyzer";
 
 interface Props {
   result: FullAnalysisResult;
@@ -20,9 +19,23 @@ export default function ResultsView({ result, onReset }: Props) {
   const [showPuzzles, setShowPuzzles] = useState(false);
   const [activePuzzleIds, setActivePuzzleIds] = useState<string[] | null>(null);
   const [initialPuzzleIndex, setInitialPuzzleIndex] = useState(0);
-  const { overallSummary, overallInsight, games, llmInsights, weakSpots, performance } = result;
+  const [gameFilter, setGameFilter] = useState<"all" | "win" | "loss" | "draw">("all");
+  const { overallSummary, overallInsight, games, llmInsights, weakSpots } = result;
 
   const puzzles = useMemo(() => extractPuzzles(games, llmInsights), [games, llmInsights]);
+  const primaryUserColor = games[0]?.game.userColor ?? "white";
+
+  // User rating from the most recent game
+  const userRating = games[0]?.game.userRating;
+  const timeClass = games[0]?.game.timeClass;
+
+  // Filtered games for the Game Details section
+  const filteredGames = useMemo(() => {
+    if (gameFilter === "all") return games.map((g, i) => ({ analysis: g, originalIndex: i }));
+    return games
+      .map((g, i) => ({ analysis: g, originalIndex: i }))
+      .filter(({ analysis }) => analysis.game.result === gameFilter);
+  }, [games, gameFilter]);
   const focusAreas = overallInsight?.topWeaknesses?.slice(0, 3) ?? [];
   const nextSteps = overallInsight?.studyPlan?.slice(0, 3) ?? [];
   const visiblePuzzles = useMemo(() => {
@@ -93,6 +106,9 @@ export default function ResultsView({ result, onReset }: Props) {
           <h1 className="text-xl font-bold text-foreground">Your Analysis</h1>
           <p className="text-sm text-muted">
             {games.length} game{games.length > 1 ? "s" : ""} analyzed
+            {userRating && timeClass && (
+              <> &middot; ~{userRating} {timeClass}</>
+            )}
           </p>
         </div>
         <button
@@ -292,21 +308,44 @@ export default function ResultsView({ result, onReset }: Props) {
         <h2 className="text-lg font-bold text-foreground mb-3">
           Game Details
         </h2>
+
+        {/* Filter buttons */}
+        <div className="flex gap-2 mb-3">
+          {(["all", "win", "loss", "draw"] as const).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setGameFilter(filter)}
+              className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors capitalize ${
+                gameFilter === filter
+                  ? "bg-primary text-white"
+                  : "bg-surface-2 text-muted border border-border hover:text-foreground"
+              }`}
+            >
+              {filter === "all" ? "All" : `${filter}s`}
+            </button>
+          ))}
+        </div>
+
         <div className="space-y-3">
-          {games.map((analysis, i) => (
+          {filteredGames.map(({ analysis, originalIndex }) => (
             <GameCard
-              key={i}
-              index={i}
+              key={originalIndex}
+              index={originalIndex}
               analysis={analysis}
-              insight={llmInsights[i]}
-              practicePuzzles={puzzles.filter((puzzle) => puzzle.gameIndex === i)}
+              insight={llmInsights[originalIndex]}
+              practicePuzzles={puzzles.filter((puzzle) => puzzle.gameIndex === originalIndex)}
               onPracticePuzzle={openSpecificPuzzle}
-              expanded={expandedGame === i}
+              expanded={expandedGame === originalIndex}
               onToggle={() =>
-                setExpandedGame(expandedGame === i ? null : i)
+                setExpandedGame(expandedGame === originalIndex ? null : originalIndex)
               }
             />
           ))}
+          {filteredGames.length === 0 && (
+            <p className="text-sm text-muted text-center py-4">
+              No {gameFilter === "all" ? "" : gameFilter} games found.
+            </p>
+          )}
         </div>
       </section>
 
@@ -415,6 +454,23 @@ function GameCard({
       {/* Expanded content */}
       {expanded && (
         <div className="px-4 pb-4 space-y-4 border-t border-border pt-3">
+          {/* Meta info row: depth + Chess.com link */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted">
+              Analysis depth: ~{ENGINE_DEPTH} ply
+            </span>
+            {game.url && (
+              <a
+                href={game.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-muted hover:text-foreground transition-colors"
+              >
+                View on Chess.com &#8599;
+              </a>
+            )}
+          </div>
+
           {/* Eval Chart */}
           <EvalChart moves={analysis.moves} />
 
