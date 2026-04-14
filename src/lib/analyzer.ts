@@ -3,11 +3,13 @@ import { ChessGame, GameAnalysis, MoveAnalysis, PositionEval } from "./types";
 
 const CHESS_API_URL = "https://chess-api.com/v1";
 
+export const ENGINE_DEPTH = 12;
+
 async function evaluatePosition(fen: string): Promise<PositionEval> {
   const res = await fetch(CHESS_API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ fen, depth: 12 }),
+    body: JSON.stringify({ fen, depth: ENGINE_DEPTH }),
   });
 
   if (!res.ok) {
