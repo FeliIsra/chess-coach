@@ -242,7 +242,7 @@ export default function Home() {
 
       {/* Footer */}
       <p className="text-xs text-muted mt-8 text-center">
-        Uses Chess.com API, Stockfish via chess-api.com, and GPT-4o-mini
+        Powered by Stockfish engine analysis and AI coaching
       </p>
     </main>
   );
