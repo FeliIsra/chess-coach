@@ -135,53 +135,10 @@ export default function ResultsView({ result, onReset }: Props) {
           </div>
         )}
 
-        {performance && (
-          <div className="mt-3 pt-3 border-t border-border">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted mb-2">
-              Performance
-            </p>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {performance.fetchMs !== undefined && (
-                <StatCard
-                  label="Fetch"
-                  value={formatTimingLabel(performance.fetchMs)}
-                  color="text-foreground"
-                />
-              )}
-              <StatCard
-                label="Engine"
-                value={formatTimingLabel(performance.stockfishMs)}
-                color="text-foreground"
-              />
-              <StatCard
-                label="AI"
-                value={formatTimingLabel(performance.llmMs)}
-                color="text-foreground"
-              />
-              <StatCard
-                label="Plan"
-                value={formatTimingLabel(performance.overallMs)}
-                color="text-foreground"
-              />
-              <StatCard
-                label="Analyze"
-                value={formatTimingLabel(performance.analyzeTotalMs)}
-                color="text-primary"
-              />
-              {performance.endToEndMs !== undefined && (
-                <StatCard
-                  label="End-to-End"
-                  value={formatTimingLabel(performance.endToEndMs)}
-                  color="text-primary"
-                />
-              )}
-            </div>
-            <p className="text-xs text-muted mt-2">
-              Avg engine/game {formatTimingLabel(performance.averageStockfishPerGameMs)}
-              {" · "}
-              avg AI/game {formatTimingLabel(performance.averageLlmPerGameMs)}
-            </p>
-          </div>
+        {performance?.endToEndMs !== undefined && (
+          <p className="text-xs text-muted mt-3 pt-3 border-t border-border">
+            Analysis completed in {formatTimingLabel(performance.endToEndMs)}
+          </p>
         )}
       </div>
 
@@ -273,9 +230,9 @@ export default function ResultsView({ result, onReset }: Props) {
                     {spot.count}
                   </span>
                 </div>
-                {spot.tip && (
-                  <p className="text-xs text-muted mt-1">{spot.tip}</p>
-                )}
+                <p className="text-xs text-muted mt-1">
+                  Practice identifying {spot.category} patterns — you had {spot.count} error{spot.count !== 1 ? "s" : ""} in this area across your recent games.
+                </p>
                 {puzzles.some((puzzle) => puzzle.category === spot.category) && (
                   <button
                     onClick={() => openCategoryPuzzles(spot.category)}
