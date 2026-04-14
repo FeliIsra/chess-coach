@@ -18,7 +18,7 @@ export default function ResultsView({ result, onReset }: Props) {
   const [showPuzzles, setShowPuzzles] = useState(false);
   const [activePuzzleIds, setActivePuzzleIds] = useState<string[] | null>(null);
   const [initialPuzzleIndex, setInitialPuzzleIndex] = useState(0);
-  const { overallSummary, overallInsight, games, llmInsights, weakSpots } = result;
+  const { overallSummary, overallInsight, games, llmInsights, weakSpots, performance } = result;
 
   const puzzles = useMemo(() => extractPuzzles(games, llmInsights), [games, llmInsights]);
   const primaryUserColor = games[0]?.game.userColor ?? "white";
@@ -136,6 +136,12 @@ export default function ResultsView({ result, onReset }: Props) {
             )}
           </div>
         )}
+
+        {performance?.endToEndMs !== undefined && (
+          <p className="text-xs text-muted mt-3 pt-3 border-t border-border">
+            Analysis completed in {formatTimingLabel(performance.endToEndMs)}
+          </p>
+        )}
       </div>
 
       {overallInsight && (
@@ -226,9 +232,9 @@ export default function ResultsView({ result, onReset }: Props) {
                     {spot.count}
                   </span>
                 </div>
-                {spot.tip && (
-                  <p className="text-xs text-muted mt-1">{spot.tip}</p>
-                )}
+                <p className="text-xs text-muted mt-1">
+                  Practice identifying {spot.category} patterns — you had {spot.count} error{spot.count !== 1 ? "s" : ""} in this area across your recent games.
+                </p>
                 {puzzles.some((puzzle) => puzzle.category === spot.category) && (
                   <button
                     onClick={() => openCategoryPuzzles(spot.category)}
@@ -315,6 +321,13 @@ export default function ResultsView({ result, onReset }: Props) {
       </div>
     </main>
   );
+}
+
+function formatTimingLabel(ms: number): string {
+  if (ms >= 1000) {
+    return `${(ms / 1000).toFixed(ms >= 10000 ? 0 : 1)}s`;
+  }
+  return `${Math.round(ms)}ms`;
 }
 
 function StatCard({
