@@ -1,0 +1,347 @@
+- generic [ref=e1]:
+  - alert [ref=e21]
+  - main [ref=e71]:
+    - generic [ref=e72]:
+      - generic [ref=e73]:
+        - heading "Your Analysis" [level=1] [ref=e74]
+        - paragraph [ref=e75]: 3 games analyzed
+      - button "New Analysis" [ref=e76]
+    - generic [ref=e77]:
+      - generic [ref=e78]:
+        - generic [ref=e79]:
+          - generic [ref=e80]:
+            - application [ref=e82]
+            - generic:
+              - generic: 33%
+              - generic: win rate
+          - generic [ref=e90]:
+            - generic [ref=e93]: 1 Win
+            - generic [ref=e96]: 2 Losses
+        - generic [ref=e97]:
+          - generic [ref=e98]:
+            - paragraph [ref=e99]: "1"
+            - paragraph [ref=e100]: Blunders
+          - generic [ref=e101]:
+            - paragraph [ref=e102]: "7"
+            - paragraph [ref=e103]: Mistakes
+          - generic [ref=e104]:
+            - paragraph [ref=e105]: 79%
+            - paragraph [ref=e106]: Average Accuracy
+      - paragraph [ref=e108]:
+        - generic [ref=e109]: 0%
+        - text: of your errors happened under time pressure
+      - generic [ref=e110]:
+        - paragraph [ref=e111]: Performance
+        - generic [ref=e112]:
+          - generic [ref=e113]:
+            - paragraph [ref=e114]: 847ms
+            - paragraph [ref=e115]: Fetch
+          - generic [ref=e116]:
+            - paragraph [ref=e117]: 4.8s
+            - paragraph [ref=e118]: Engine
+          - generic [ref=e119]:
+            - paragraph [ref=e120]: 18s
+            - paragraph [ref=e121]: AI
+          - generic [ref=e122]:
+            - paragraph [ref=e123]: 0ms
+            - paragraph [ref=e124]: Plan
+          - generic [ref=e125]:
+            - paragraph [ref=e126]: 23s
+            - paragraph [ref=e127]: Analyze
+          - generic [ref=e128]:
+            - paragraph [ref=e129]: 28s
+            - paragraph [ref=e130]: End-to-End
+        - paragraph [ref=e131]: Avg engine/game 1.6s · avg AI/game 6.0s
+    - generic [ref=e132]:
+      - heading "What To Fix First" [level=2] [ref=e133]
+      - generic [ref=e134]:
+        - paragraph [ref=e135]: Across 3 recent games, the biggest drag on results is positional. You gave away 1 blunders and 7 mistakes, so the fastest improvement comes from reducing avoidable tactical damage before expanding your opening work.
+        - generic [ref=e136]:
+          - heading "Top recurring problems" [level=3] [ref=e137]
+          - list [ref=e138]:
+            - listitem [ref=e139]:
+              - generic [ref=e140]: "1."
+              - text: positional keeps showing up across your recent errors.
+            - listitem [ref=e141]:
+              - generic [ref=e142]: "2."
+              - text: opening keeps showing up across your recent errors.
+            - listitem [ref=e143]:
+              - generic [ref=e144]: "3."
+              - text: tactics keeps showing up across your recent errors.
+        - generic [ref=e145]:
+          - heading "Keep doing this" [level=3] [ref=e146]
+          - list [ref=e147]:
+            - listitem [ref=e148]:
+              - generic [ref=e149]: +
+              - text: Demonstrated solid endgame awareness with king safety.
+            - listitem [ref=e150]:
+              - generic [ref=e151]: +
+              - text: Showed ability to recognize threats in the late game.
+            - listitem [ref=e152]:
+              - generic [ref=e153]: +
+              - text: Ability to capitalize on tactical opportunities effectively.
+        - generic [ref=e154]:
+          - heading "Next training block" [level=3] [ref=e155]
+          - list [ref=e156]:
+            - listitem [ref=e157]:
+              - generic [ref=e158]: "1."
+              - text: Pause on quiet moves and ask which piece improves most without creating new targets.
+            - listitem [ref=e159]:
+              - generic [ref=e160]: "2."
+              - text: Narrow your opening choices and memorize the first safe setup instead of chasing sidelines.
+            - listitem [ref=e161]:
+              - generic [ref=e162]: "3."
+              - text: Do 10 short tactical puzzles and verbalize the forcing line before moving.
+        - button "Start With 5 mistake puzzles" [ref=e163]
+    - generic [ref=e164]:
+      - heading "Train By Theme" [level=2] [ref=e165]
+      - generic [ref=e166]:
+        - generic [ref=e167]:
+          - generic [ref=e168]:
+            - generic [ref=e169]: positional
+            - generic [ref=e170]: "4"
+          - paragraph [ref=e171]: Pause on quiet moves and ask which piece improves most without creating new targets.
+          - button "Practice this theme" [ref=e172]
+        - generic [ref=e173]:
+          - generic [ref=e174]:
+            - generic [ref=e175]: opening
+            - generic [ref=e176]: "3"
+          - paragraph [ref=e177]: Narrow your opening choices and memorize the first safe setup instead of chasing sidelines.
+          - button "Practice this theme" [ref=e178]
+        - generic [ref=e179]:
+          - generic [ref=e180]:
+            - generic [ref=e181]: tactics
+            - generic [ref=e182]: "1"
+          - paragraph [ref=e183]: Do 10 short tactical puzzles and verbalize the forcing line before moving.
+          - button "Practice this theme" [ref=e184]
+    - generic [ref=e185]:
+      - heading "Your Openings" [level=2] [ref=e186]
+      - generic [ref=e187]:
+        - generic [ref=e188]:
+          - generic [ref=e189]:
+            - paragraph [ref=e190]: Reti Opening Nimzo Larsen Variation 2...d6 3.Bb2 E5
+            - paragraph [ref=e191]: 1 game · 0.0 blunders/game
+          - paragraph [ref=e192]: 0W-1L-0D
+        - generic [ref=e193]:
+          - generic [ref=e194]:
+            - paragraph [ref=e195]: Indian Game Black Knights Tango 3.Nf3 E6 4.g3 Bb4
+            - paragraph [ref=e196]: 1 game · 0.0 blunders/game
+          - paragraph [ref=e197]: 1W-0L-0D
+        - generic [ref=e198]:
+          - generic [ref=e199]:
+            - paragraph [ref=e200]: English Opening Anglo Indian Queens Knight Variation...4.Bg2 O O 5.d3 C5
+            - paragraph [ref=e201]: 1 game · 1.0 blunders/game
+          - paragraph [ref=e202]: 0W-1L-0D
+    - generic [ref=e203]:
+      - heading "Game Details" [level=2] [ref=e204]
+      - generic [ref=e205]:
+        - button "vs Sanyura (2889) Reti Opening Nimzo Larsen Variation 2...d6 3.Bb2 E5 · bullet · white · LOSS 4 mistakes +" [ref=e207]:
+          - generic [ref=e209]:
+            - generic [ref=e210]:
+              - paragraph [ref=e211]: vs Sanyura
+              - generic [ref=e212]: (2889)
+            - paragraph [ref=e213]: Reti Opening Nimzo Larsen Variation 2...d6 3.Bb2 E5 · bullet · white · LOSS
+          - generic [ref=e214]:
+            - generic [ref=e216]: 4 mistakes
+            - text: +
+        - button "vs Sanyura (2878) Indian Game Black Knights Tango 3.Nf3 E6 4.g3 Bb4 · bullet · black · WIN 2 mistakes +" [ref=e218]:
+          - generic [ref=e220]:
+            - generic [ref=e221]:
+              - paragraph [ref=e222]: vs Sanyura
+              - generic [ref=e223]: (2878)
+            - paragraph [ref=e224]: Indian Game Black Knights Tango 3.Nf3 E6 4.g3 Bb4 · bullet · black · WIN
+          - generic [ref=e225]:
+            - generic [ref=e227]: 2 mistakes
+            - text: +
+        - generic [ref=e228]:
+          - button "vs Sanyura (2883) English Opening Anglo Indian Queens Knight Variation...4.Bg2 O O 5.d3 C5 · bullet · white · LOSS 1 blunder 1 mistake −" [active] [ref=e247]:
+            - generic [ref=e231]:
+              - generic [ref=e232]:
+                - paragraph [ref=e233]: vs Sanyura
+                - generic [ref=e234]: (2883)
+              - paragraph [ref=e235]: English Opening Anglo Indian Queens Knight Variation...4.Bg2 O O 5.d3 C5 · bullet · white · LOSS
+            - generic [ref=e236]:
+              - generic [ref=e237]:
+                - generic [ref=e238]: 1 blunder
+                - generic [ref=e239]: 1 mistake
+              - text: −
+          - generic [ref=e248]:
+            - application [ref=e251]:
+              - generic [ref=e282]:
+                - generic [ref=e283]:
+                  - generic [ref=e285]: "1"
+                  - generic [ref=e287]: "3"
+                  - generic [ref=e289]: "5"
+                  - generic [ref=e291]: "7"
+                  - generic [ref=e293]: "9"
+                  - generic [ref=e295]: "11"
+                  - generic [ref=e297]: "13"
+                  - generic [ref=e299]: "15"
+                  - generic [ref=e301]: "17"
+                  - generic [ref=e303]: "19"
+                  - generic [ref=e305]: "21"
+                  - generic [ref=e307]: "23"
+                  - generic [ref=e309]: "25"
+                  - generic [ref=e311]: "27"
+                  - generic [ref=e313]: "29"
+                  - generic [ref=e315]: "31"
+                  - generic [ref=e317]: "33"
+                  - generic [ref=e319]: "35"
+                  - generic [ref=e321]: "37"
+                  - generic [ref=e323]: "39"
+                  - generic [ref=e325]: "41"
+                  - generic [ref=e327]: "43"
+                  - generic [ref=e329]: "45"
+                  - generic [ref=e331]: "47"
+                  - generic [ref=e333]: "49"
+                - generic [ref=e334]:
+                  - generic [ref=e336]: "-10"
+                  - generic [ref=e338]: "-5"
+                  - generic [ref=e340]: "0"
+                  - generic [ref=e342]: "+10"
+            - generic [ref=e343]:
+              - generic [ref=e344]:
+                - generic [ref=e345]:
+                  - generic [ref=e346]: Brilliant
+                  - generic [ref=e347]: Move 8. Bxc6
+                - generic [ref=e348]: "+0.6"
+              - generic [ref=e349]:
+                - generic [ref=e350]:
+                  - generic [ref=e352]:
+                    - generic [ref=e353]: "8"
+                    - button [disabled] [ref=e355]:
+                      - img [ref=e357] [cursor=pointer]
+                  - button [disabled] [ref=e371]:
+                    - img [ref=e373] [cursor=pointer]
+                  - button [disabled] [ref=e383]:
+                    - img [ref=e385] [cursor=pointer]
+                  - button [disabled] [ref=e407]:
+                    - img [ref=e409] [cursor=pointer]
+                  - button [disabled] [ref=e420]:
+                    - img [ref=e422] [cursor=pointer]
+                  - generic [ref=e432]:
+                    - generic [ref=e433]: "7"
+                    - button [disabled] [ref=e435]:
+                      - img [ref=e437] [cursor=pointer]
+                  - button [disabled] [ref=e442]:
+                    - img [ref=e444] [cursor=pointer]
+                  - button [disabled] [ref=e455]:
+                    - img [ref=e457] [cursor=pointer]
+                  - button [disabled] [ref=e462]:
+                    - img [ref=e464] [cursor=pointer]
+                  - button [disabled] [ref=e469]:
+                    - img [ref=e471] [cursor=pointer]
+                  - button [disabled] [ref=e481]:
+                    - img [ref=e483] [cursor=pointer]
+                  - generic [ref=e487]: "6"
+                  - button [disabled] [ref=e495]:
+                    - img [ref=e497] [cursor=pointer]
+                  - button [disabled] [ref=e507]:
+                    - img [ref=e509] [cursor=pointer]
+                  - button [disabled] [ref=e517]:
+                    - img [ref=e519] [cursor=pointer]
+                  - button [disabled] [ref=e529]:
+                    - img [ref=e531] [cursor=pointer]
+                  - generic [ref=e538]: "5"
+                  - button [disabled] [ref=e546]:
+                    - img [ref=e548] [cursor=pointer]
+                  - generic [ref=e567]: "4"
+                  - button [disabled] [ref=e575]:
+                    - img [ref=e577] [cursor=pointer]
+                  - generic [ref=e596]: "3"
+                  - button [disabled] [ref=e601]:
+                    - img [ref=e603] [cursor=pointer]
+                  - button [disabled] [ref=e608]:
+                    - img [ref=e610] [cursor=pointer]
+                  - button [disabled] [ref=e619]:
+                    - img [ref=e621] [cursor=pointer]
+                  - button [disabled] [ref=e632]:
+                    - img [ref=e634] [cursor=pointer]
+                  - generic [ref=e640]:
+                    - generic [ref=e641]: "2"
+                    - button [disabled] [ref=e643]:
+                      - img [ref=e645] [cursor=pointer]
+                  - button [disabled] [ref=e656]:
+                    - img [ref=e658] [cursor=pointer]
+                  - button [disabled] [ref=e672]:
+                    - img [ref=e674] [cursor=pointer]
+                  - button [disabled] [ref=e679]:
+                    - img [ref=e681] [cursor=pointer]
+                  - button [disabled] [ref=e686]:
+                    - img [ref=e688] [cursor=pointer]
+                  - button [disabled] [ref=e698]:
+                    - img [ref=e700] [cursor=pointer]
+                  - generic [ref=e703]:
+                    - generic:
+                      - generic [ref=e704]: a
+                      - generic [ref=e705]: "1"
+                    - button [disabled] [ref=e707]:
+                      - img [ref=e709] [cursor=pointer]
+                  - generic [ref=e719]: b
+                  - generic [ref=e722]:
+                    - generic [ref=e723]: c
+                    - button [disabled] [ref=e725]:
+                      - img [ref=e727] [cursor=pointer]
+                  - generic [ref=e736]: d
+                  - generic [ref=e739]:
+                    - generic [ref=e740]: e
+                    - button [disabled] [ref=e742]:
+                      - img [ref=e744] [cursor=pointer]
+                  - generic [ref=e753]: f
+                  - generic [ref=e756]:
+                    - generic [ref=e757]: g
+                    - button [disabled] [ref=e759]:
+                      - img [ref=e761] [cursor=pointer]
+                  - generic [ref=e768]:
+                    - generic [ref=e769]: h
+                    - button [disabled] [ref=e771]:
+                      - img [ref=e773] [cursor=pointer]
+                  - img
+                - status [ref=e781]
+              - generic [ref=e782]:
+                - generic [ref=e783]:
+                  - button "Prev" [disabled] [ref=e784]
+                  - button "Next" [ref=e785]
+                - button "After Move" [ref=e786]
+                - generic [ref=e787]: 1/22
+              - paragraph [ref=e788]: "Best move: Nf3 (g1f3)"
+            - paragraph [ref=e789]: The game featured critical mistakes that allowed Black to seize the initiative, while White demonstrated some strong tactical awareness in the endgame.
+            - button "Practice the first critical mistake from this game" [ref=e790]
+            - generic [ref=e791]:
+              - heading "Key Mistakes" [level=4] [ref=e792]
+              - generic [ref=e793]:
+                - generic [ref=e794]:
+                  - paragraph [ref=e795]: "Move 14: O-O"
+                  - paragraph [ref=e796]: This move allowed Black to gain a significant initiative by enabling counterplay; instead, advancing the pawn to e5 would have challenged Black's center and improved White's position.
+                  - paragraph [ref=e797]: "Concept: Pawn breaks"
+                  - button "Practice this position" [ref=e798]
+                - generic [ref=e799]:
+                  - paragraph [ref=e800]: "Move 15: Qe3"
+                  - paragraph [ref=e801]: This move misplaced the queen and allowed Black to consolidate; playing c3 would have better supported the knight and maintained pressure.
+                  - paragraph [ref=e802]: "Concept: Piece activity"
+                  - button "Practice this position" [ref=e803]
+            - generic [ref=e804]:
+              - heading "Great Moves" [level=4] [ref=e805]
+              - generic [ref=e806]:
+                - generic [ref=e807]:
+                  - paragraph [ref=e808]: "Move 43: f5"
+                  - paragraph [ref=e809]: This move created a passed pawn and significantly improved White's winning chances by threatening to advance further.
+                  - paragraph [ref=e810]: "Concept: Passed pawns"
+                - generic [ref=e811]:
+                  - paragraph [ref=e812]: "Move 39: Rf1"
+                  - paragraph [ref=e813]: This move centralized the rook and increased pressure on Black's position, leading to a favorable tactical sequence.
+                  - paragraph [ref=e814]: "Concept: Rook activity"
+            - generic [ref=e815]:
+              - heading "How to Improve" [level=4] [ref=e816]
+              - list [ref=e817]:
+                - listitem [ref=e818]:
+                  - generic [ref=e819]: →
+                  - text: Practice pawn break techniques in various openings to understand their impact on the center.
+                - listitem [ref=e820]:
+                  - generic [ref=e821]: →
+                  - text: Analyze games focusing on piece activity to recognize when to centralize or reposition pieces effectively.
+                - listitem [ref=e822]:
+                  - generic [ref=e823]: →
+                  - text: Drill endgame scenarios with passed pawns to improve conversion of advantageous positions.
+    - button "Analyze More Games" [ref=e241]
+  - generic [ref=e824]: "-10"

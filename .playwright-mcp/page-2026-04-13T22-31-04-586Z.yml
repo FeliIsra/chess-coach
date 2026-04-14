@@ -1,0 +1,195 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e25] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e26]:
+      - img [ref=e27]
+    - generic [ref=e30]:
+      - button "Open issues overlay" [ref=e31]:
+        - generic [ref=e68]:
+          - generic [ref=e69]: "1"
+          - generic [ref=e70]: "2"
+        - generic [ref=e35]:
+          - text: Issue
+          - generic [ref=e71]: s
+      - button "Collapse issues badge" [ref=e36]:
+        - img [ref=e37]
+  - alert [ref=e20]
+  - main [ref=e72]:
+    - generic [ref=e73]:
+      - generic [ref=e74]:
+        - heading "Your Analysis" [level=1] [ref=e75]
+        - paragraph [ref=e76]: 5 games analyzed
+      - button "New Analysis" [ref=e77]
+    - generic [ref=e78]:
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - application [ref=e84]
+          - generic [ref=e92]:
+            - generic [ref=e95]: 1 Win
+            - generic [ref=e98]: 4 Losses
+        - generic [ref=e99]:
+          - generic [ref=e100]:
+            - paragraph [ref=e101]: "28"
+            - paragraph [ref=e102]: Blunders
+          - generic [ref=e103]:
+            - paragraph [ref=e104]: "15"
+            - paragraph [ref=e105]: Mistakes
+          - generic [ref=e106]:
+            - paragraph [ref=e107]: 16%
+            - paragraph [ref=e108]: Average Accuracy
+      - paragraph [ref=e110]:
+        - generic [ref=e111]: 0%
+        - text: of your errors happened under time pressure
+    - generic [ref=e112]:
+      - heading "What To Fix First" [level=2] [ref=e113]
+      - generic [ref=e114]:
+        - paragraph [ref=e115]: Your recent games indicate a significant struggle with tactical awareness and king safety, which has led to a high number of blunders. While you demonstrate a solid understanding of opening principles and piece development, these strengths are often undermined by tactical oversights and inadequate responses to threats. Improving your tactical skills and maintaining king safety should be your primary focus moving forward.
+        - generic [ref=e116]:
+          - heading "Top recurring problems" [level=3] [ref=e117]
+          - list [ref=e118]:
+            - listitem [ref=e119]:
+              - generic [ref=e120]: "1."
+              - text: Neglecting king safety, leading to immediate threats
+            - listitem [ref=e121]:
+              - generic [ref=e122]: "2."
+              - text: Struggled with tactical awareness, leading to significant blunders
+            - listitem [ref=e123]:
+              - generic [ref=e124]: "3."
+              - text: Lack of awareness regarding the consequences of piece placement
+        - generic [ref=e125]:
+          - heading "Keep doing this" [level=3] [ref=e126]
+          - list [ref=e127]:
+            - listitem [ref=e128]:
+              - generic [ref=e129]: +
+              - text: Ability to develop pieces quickly in the opening phase
+            - listitem [ref=e130]:
+              - generic [ref=e131]: +
+              - text: Understanding of basic opening principles
+            - listitem [ref=e132]:
+              - generic [ref=e133]: +
+              - text: Demonstrated ability to capitalize on opponent's mistakes
+        - generic [ref=e134]:
+          - heading "Next training block" [level=3] [ref=e135]
+          - list [ref=e136]:
+            - listitem [ref=e137]:
+              - generic [ref=e138]: "1."
+              - text: Solve 10 tactical puzzles daily focusing on common patterns and themes.
+            - listitem [ref=e139]:
+              - generic [ref=e140]: "2."
+              - text: Review and analyze your own games to identify specific tactical mistakes and missed opportunities.
+            - listitem [ref=e141]:
+              - generic [ref=e142]: "3."
+              - text: Study king safety principles, including common checkmating patterns and defensive techniques.
+        - button "Start With 5 mistake puzzles" [ref=e143]
+    - generic [ref=e144]:
+      - heading "Train By Theme" [level=2] [ref=e145]
+      - generic [ref=e146]:
+        - generic [ref=e147]:
+          - generic [ref=e148]:
+            - generic [ref=e149]: tactics
+            - generic [ref=e150]: "9"
+          - paragraph [ref=e151]: Regularly practice tactical puzzles to sharpen your recognition of threats and opportunities.
+          - button "Practice this theme" [ref=e152]
+        - generic [ref=e153]:
+          - generic [ref=e154]:
+            - generic [ref=e155]: positional
+            - generic [ref=e156]: "8"
+          - paragraph [ref=e157]: Analyze your games to understand the impact of piece placement and its consequences.
+          - button "Practice this theme" [ref=e158]
+        - generic [ref=e159]:
+          - generic [ref=e160]:
+            - generic [ref=e161]: opening
+            - generic [ref=e162]: "3"
+          - paragraph [ref=e163]: Focus on mastering a few openings to improve consistency in piece development and central control.
+          - button "Practice this theme" [ref=e164]
+        - generic [ref=e165]:
+          - generic [ref=e166]:
+            - generic [ref=e167]: pawn structure
+            - generic [ref=e168]: "2"
+          - paragraph [ref=e169]: Study pawn structure fundamentals to understand how to maintain a strong formation.
+          - button "Practice this theme" [ref=e170]
+        - generic [ref=e171]:
+          - generic [ref=e172]:
+            - generic [ref=e173]: endgame
+            - generic [ref=e174]: "2"
+          - paragraph [ref=e175]: Practice basic endgame scenarios to improve your king safety and checkmating techniques.
+          - button "Practice this theme" [ref=e176]
+    - generic [ref=e177]:
+      - heading "Your Openings" [level=2] [ref=e178]
+      - generic [ref=e179]:
+        - generic [ref=e180]:
+          - generic [ref=e181]:
+            - paragraph [ref=e182]: Sicilian Defense
+            - paragraph [ref=e183]: 2 games · 8.5 blunders/game
+          - paragraph [ref=e184]: 0W-2L-0D
+        - generic [ref=e185]:
+          - generic [ref=e186]:
+            - paragraph [ref=e187]: Tarrasch Defense 4.cxd5 Exd5
+            - paragraph [ref=e188]: 1 game · 6.0 blunders/game
+          - paragraph [ref=e189]: 0W-1L-0D
+        - generic [ref=e190]:
+          - generic [ref=e191]:
+            - paragraph [ref=e192]: Four Knights Game
+            - paragraph [ref=e193]: 1 game · 2.0 blunders/game
+          - paragraph [ref=e194]: 1W-0L-0D
+        - generic [ref=e195]:
+          - generic [ref=e196]:
+            - paragraph [ref=e197]: Kings Pawn Opening 1...e5
+            - paragraph [ref=e198]: 1 game · 3.0 blunders/game
+          - paragraph [ref=e199]: 0W-1L-0D
+    - generic [ref=e200]:
+      - heading "Game Details" [level=2] [ref=e201]
+      - generic [ref=e202]:
+        - button "vs theiaeva (465) Sicilian Defense · bullet · black · LOSS 1 blunder +" [ref=e204]:
+          - generic [ref=e206]:
+            - generic [ref=e207]:
+              - paragraph [ref=e208]: vs theiaeva
+              - generic [ref=e209]: (465)
+            - paragraph [ref=e210]: Sicilian Defense · bullet · black · LOSS
+          - generic [ref=e211]:
+            - generic [ref=e213]: 1 blunder
+            - text: +
+        - button "vs georgeciotti (426) Tarrasch Defense 4.cxd5 Exd5 · bullet · white · LOSS 6 blunders 4 mistakes +" [ref=e215]:
+          - generic [ref=e217]:
+            - generic [ref=e218]:
+              - paragraph [ref=e219]: vs georgeciotti
+              - generic [ref=e220]: (426)
+            - paragraph [ref=e221]: Tarrasch Defense 4.cxd5 Exd5 · bullet · white · LOSS
+          - generic [ref=e222]:
+            - generic [ref=e223]:
+              - generic [ref=e224]: 6 blunders
+              - generic [ref=e225]: 4 mistakes
+            - text: +
+        - button "vs josemsmg (397) Four Knights Game · bullet · white · WIN 2 blunders 2 mistakes +" [ref=e227]:
+          - generic [ref=e229]:
+            - generic [ref=e230]:
+              - paragraph [ref=e231]: vs josemsmg
+              - generic [ref=e232]: (397)
+            - paragraph [ref=e233]: Four Knights Game · bullet · white · WIN
+          - generic [ref=e234]:
+            - generic [ref=e235]:
+              - generic [ref=e236]: 2 blunders
+              - generic [ref=e237]: 2 mistakes
+            - text: +
+        - button "vs steblueblood (427) Kings Pawn Opening 1...e5 · bullet · white · LOSS 3 blunders 2 mistakes +" [ref=e239]:
+          - generic [ref=e241]:
+            - generic [ref=e242]:
+              - paragraph [ref=e243]: vs steblueblood
+              - generic [ref=e244]: (427)
+            - paragraph [ref=e245]: Kings Pawn Opening 1...e5 · bullet · white · LOSS
+          - generic [ref=e246]:
+            - generic [ref=e247]:
+              - generic [ref=e248]: 3 blunders
+              - generic [ref=e249]: 2 mistakes
+            - text: +
+        - button "vs Eygi61 (663) Sicilian Defense · rapid · black · LOSS 16 blunders 7 mistakes +" [ref=e251]:
+          - generic [ref=e253]:
+            - generic [ref=e254]:
+              - paragraph [ref=e255]: vs Eygi61
+              - generic [ref=e256]: (663)
+            - paragraph [ref=e257]: Sicilian Defense · rapid · black · LOSS
+          - generic [ref=e258]:
+            - generic [ref=e259]:
+              - generic [ref=e260]: 16 blunders
+              - generic [ref=e261]: 7 mistakes
+            - text: +
+    - button "Analyze More Games" [ref=e263]

@@ -1,0 +1,1 @@
+[       5ms] [ERROR] Fetch API cannot load about:blank/api/games?username=Feliisra&count=1. URL scheme "about" is not supported. @ :1

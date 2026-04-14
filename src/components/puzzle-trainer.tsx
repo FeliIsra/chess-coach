@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { LLMInsight, MoveAnalysis, TacticalCategory } from "@/lib/types";
@@ -16,9 +16,13 @@ export interface Puzzle {
   id: string;
   gameIndex: number;
   fen: string;
+  fenAfter: string;
   bestMove: string;
   bestMoveLabel: string;
   san: string;
+  from: string;
+  to: string;
+  userColor: "white" | "black";
   moveNumber: number;
   classification: string;
   evalLoss: number;
@@ -29,7 +33,6 @@ export interface Puzzle {
 
 interface Props {
   puzzles: Puzzle[];
-  userColor: "white" | "black";
   onClose: () => void;
   initialIndex?: number;
 }
@@ -57,9 +60,13 @@ export function extractPuzzles(
           id: `${gameIndex}-${move.moveNumber}-${move.san}`,
           gameIndex,
           fen: move.fen,
+          fenAfter: move.fenAfter,
           bestMove: move.bestMove,
           bestMoveLabel: formatBestMoveLabel(move.fen, move.bestMove),
           san: move.san,
+          from: move.from,
+          to: move.to,
+          userColor: games[gameIndex].game.userColor,
           moveNumber: move.moveNumber,
           classification: move.classification,
           evalLoss: Math.max(0, -move.evalDiff),
@@ -76,9 +83,50 @@ export function extractPuzzles(
 
 type FeedbackState = "correct" | "wrong" | "revealed" | null;
 
+function getPuzzleHint(puzzle: Puzzle, attempts: number): string {
+  if (attempts >= 1) {
+    return `Compare your move ${puzzle.san} with ${puzzle.bestMoveLabel} and focus on the immediate threat that the engine move neutralizes.`;
+  }
+
+  if (puzzle.category === "tactics") {
+    return "Start with forcing moves: checks, captures, and direct threats usually reveal the tactical fix.";
+  }
+  if (puzzle.category === "king safety") {
+    return "Look for the move that removes the most urgent danger around your king first.";
+  }
+  if (puzzle.category === "piece safety") {
+    return "Ask which loose piece or undefended square becomes safer after the best move.";
+  }
+  if (puzzle.category === "opening") {
+    return "Prefer the move that improves development or central control before chasing material.";
+  }
+  if (puzzle.concept) {
+    return `Focus on ${puzzle.concept.toLowerCase()} before making the move.`;
+  }
+
+  return "Look for the move that cuts off your opponent's most forcing reply.";
+}
+
+function getRevealExplanation(puzzle: Puzzle): string {
+  if (puzzle.explanation) {
+    return puzzle.explanation;
+  }
+
+  if (puzzle.category === "tactics") {
+    return "The engine line works because it deals with the forcing tactical idea before your opponent can exploit it.";
+  }
+  if (puzzle.category === "king safety") {
+    return "The engine move reduces pressure on your king and removes the most dangerous attacking continuation.";
+  }
+  if (puzzle.category === "piece safety") {
+    return "The engine move keeps your loose pieces defended and avoids letting the position collapse tactically.";
+  }
+
+  return "The engine move keeps more control of the position and avoids the tactical or structural damage caused by your move.";
+}
+
 export default function PuzzleTrainer({
   puzzles,
-  userColor,
   onClose,
   initialIndex = 0,
 }: Props) {
@@ -86,6 +134,7 @@ export default function PuzzleTrainer({
   const [attemptsForCurrent, setAttemptsForCurrent] = useState(0);
   const [stats, setStats] = useState(createPuzzleSessionStats);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
+  const [showAfterPosition, setShowAfterPosition] = useState(false);
 
   const puzzle = puzzles[currentIndex];
   const isFinished = currentIndex >= puzzles.length;
@@ -93,18 +142,9 @@ export default function PuzzleTrainer({
   const moveToNextPuzzle = useCallback(() => {
     setFeedback(null);
     setAttemptsForCurrent(0);
+    setShowAfterPosition(false);
     setCurrentIndex((i) => i + 1);
   }, []);
-
-  useEffect(() => {
-    if (feedback !== "correct") return;
-
-    const timer = window.setTimeout(() => {
-      moveToNextPuzzle();
-    }, 1200);
-
-    return () => window.clearTimeout(timer);
-  }, [feedback, moveToNextPuzzle]);
 
   const handleDrop = useCallback(
     ({
@@ -115,7 +155,13 @@ export default function PuzzleTrainer({
       sourceSquare: string;
       targetSquare: string | null;
     }) => {
-      if (!puzzle || !targetSquare || feedback === "correct" || feedback === "revealed") {
+      if (
+        !puzzle ||
+        !targetSquare ||
+        feedback === "correct" ||
+        feedback === "revealed" ||
+        showAfterPosition
+      ) {
         return false;
       }
 
@@ -146,7 +192,7 @@ export default function PuzzleTrainer({
 
       return true;
     },
-    [attemptsForCurrent, feedback, puzzle]
+    [attemptsForCurrent, feedback, puzzle, showAfterPosition]
   );
 
   if (isFinished) {
@@ -203,9 +249,13 @@ export default function PuzzleTrainer({
         </div>
 
         <p className="text-sm text-foreground/80">
-          You played <span className="font-mono text-accent-red">{puzzle.san}</span> (
-          {puzzle.classification}) on move {puzzle.moveNumber}. Find the best move to avoid
-          dropping about {(puzzle.evalLoss / 100).toFixed(1)} pawns of value.
+          Position before your move {puzzle.moveNumber}. You chose{" "}
+          <span className="font-mono text-accent-red">{puzzle.san}</span> (
+          {puzzle.classification}). Find a better move to avoid dropping about{" "}
+          {(puzzle.evalLoss / 100).toFixed(1)} pawns of value.
+        </p>
+        <p className="text-xs text-muted">
+          Your played path is marked in red: {puzzle.from}&rarr;{puzzle.to}.
         </p>
 
         {(puzzle.category || puzzle.concept) && (
@@ -227,22 +277,50 @@ export default function PuzzleTrainer({
           <div className="rounded-lg overflow-hidden">
             <Chessboard
               options={{
-                position: puzzle.fen,
-                boardOrientation: userColor,
+                position: showAfterPosition ? puzzle.fenAfter : puzzle.fen,
+                boardOrientation: puzzle.userColor,
                 darkSquareStyle: { backgroundColor: "#4a3728" },
                 lightSquareStyle: { backgroundColor: "#d4a96a" },
-                allowDragging: feedback !== "correct" && feedback !== "revealed",
+                allowDragging:
+                  feedback !== "correct" &&
+                  feedback !== "revealed" &&
+                  !showAfterPosition,
                 allowDrawingArrows: false,
+                arrows: [
+                  {
+                    startSquare: puzzle.from,
+                    endSquare: puzzle.to,
+                    color: "rgba(239, 68, 68, 0.8)",
+                  },
+                ],
                 onPieceDrop: handleDrop,
               }}
             />
           </div>
         </div>
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowAfterPosition((current) => !current)}
+            className="px-3 py-1.5 text-xs bg-surface-2 hover:bg-surface-3 text-foreground rounded-md transition-colors border border-border"
+          >
+            {showAfterPosition ? "Show Before Move" : "Show After Move"}
+          </button>
+        </div>
+        {showAfterPosition && (
+          <p className="text-xs text-muted">
+            Solving is disabled in this view. Switch back to before move to play the puzzle.
+          </p>
+        )}
 
         {feedback === "correct" && (
           <div className="bg-accent-green/10 border border-accent-green/30 rounded-xl px-4 py-3 text-accent-green text-sm text-center">
             <p className="font-semibold">Correct.</p>
-            <p className="mt-1">That move holds the position together better than {puzzle.san}.</p>
+            <p className="mt-1">
+              {puzzle.bestMoveLabel} solves the problem more cleanly than {puzzle.san}.
+            </p>
+            <p className="mt-2 text-foreground/70">
+              {getRevealExplanation(puzzle)}
+            </p>
           </div>
         )}
 
@@ -251,9 +329,14 @@ export default function PuzzleTrainer({
             <p className="font-semibold">Incorrect.</p>
             <p className="mt-1">
               {attemptsForCurrent >= 2
-                ? "You can reveal the solution or keep trying."
-                : "Try again and look for the move that reduces the danger immediately."}
+                ? "You can reveal the line now, or use the hint below and try once more."
+                : getPuzzleHint(puzzle, attemptsForCurrent)}
             </p>
+            {puzzle.concept && (
+              <p className="mt-2 text-foreground/70">
+                Target concept: {puzzle.concept}
+              </p>
+            )}
           </div>
         )}
 
@@ -264,12 +347,10 @@ export default function PuzzleTrainer({
               Best move: <span className="font-mono text-accent-blue">{puzzle.bestMoveLabel}</span>
             </p>
             <p className="mt-1">
-              Your move {puzzle.san} let the evaluation fall quickly. The engine move keeps more
-              control and prevents the position from collapsing.
+              Your move {puzzle.san} let the evaluation fall quickly. {puzzle.bestMoveLabel} is the
+              practical repair.
             </p>
-            {puzzle.explanation && (
-              <p className="mt-2 text-foreground/70">{puzzle.explanation}</p>
-            )}
+            <p className="mt-2 text-foreground/70">{getRevealExplanation(puzzle)}</p>
           </div>
         )}
 
@@ -286,12 +367,16 @@ export default function PuzzleTrainer({
                 Reveal solution
               </button>
             )}
-            {(feedback === "revealed" || feedback === "wrong") && (
+            {(feedback === "revealed" || feedback === "wrong" || feedback === "correct") && (
               <button
                 onClick={moveToNextPuzzle}
-                className="px-3 py-2 text-xs bg-surface-2 hover:bg-surface-3 text-foreground rounded-lg border border-border transition-colors"
+                className={`px-3 py-2 text-xs rounded-lg border transition-colors ${
+                  feedback === "correct"
+                    ? "bg-primary hover:bg-primary-hover border-primary text-white"
+                    : "bg-surface-2 hover:bg-surface-3 border-border text-foreground"
+                }`}
               >
-                Next puzzle
+                {feedback === "correct" ? "Continue" : "Next puzzle"}
               </button>
             )}
           </div>

@@ -1,0 +1,83 @@
+- generic [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]: ♞
+      - heading "Chess Coach" [level=1] [ref=e5]
+      - paragraph [ref=e6]: AI-powered analysis of your Chess.com games
+    - generic [ref=e32]:
+      - generic [ref=e33]:
+        - heading "Your Progress" [level=3] [ref=e34]
+        - paragraph [ref=e35]: Finish a few analyses and this area will start showing trend lines.
+      - generic [ref=e36]: empty
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]: Chess.com Username
+        - textbox "Chess.com Username" [ref=e10]:
+          - /placeholder: e.g. hikaru
+          - text: Feliisra
+      - generic [ref=e11]:
+        - generic [ref=e12]: "Games to analyze: 5"
+        - slider [ref=e13]: "5"
+        - generic [ref=e14]:
+          - generic [ref=e15]: "1"
+          - generic [ref=e16]: "10"
+          - generic [ref=e17]: "20"
+        - paragraph [ref=e18]: Usually about 40-70s depending on Chess.com, engine, and AI response time.
+      - generic [ref=e37]: Analysis request failed
+      - button "Analyze My Games" [ref=e38]
+    - paragraph [ref=e20]: Uses Chess.com API, Stockfish via chess-api.com, and GPT-4o-mini
+  - generic [active]:
+    - generic [ref=e41]:
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - navigation [ref=e44]:
+            - button "previous" [disabled] [ref=e45]:
+              - img "previous" [ref=e46]
+            - generic [ref=e48]:
+              - generic [ref=e49]: 1/
+              - text: "1"
+            - button "next" [disabled] [ref=e50]:
+              - img "next" [ref=e51]
+          - img
+        - generic [ref=e53]:
+          - link "Next.js 16.1.6 (stale) Turbopack" [ref=e54] [cursor=pointer]:
+            - /url: https://nextjs.org/docs/messages/version-staleness
+            - img [ref=e55]
+            - generic "There is a newer version (16.2.3) available, upgrade recommended!" [ref=e57]: Next.js 16.1.6 (stale)
+            - generic [ref=e58]: Turbopack
+          - img
+      - dialog "Build Error" [ref=e60]:
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - generic [ref=e65]:
+              - generic [ref=e67]: Build Error
+              - generic [ref=e68]:
+                - button "Copy Error Info" [ref=e69] [cursor=pointer]:
+                  - img [ref=e70]
+                - link "Go to related documentation" [ref=e72] [cursor=pointer]:
+                  - /url: https://nextjs.org/docs/messages/module-not-found
+                  - img [ref=e73]
+                - button "Attach Node.js inspector" [ref=e75] [cursor=pointer]:
+                  - img [ref=e76]
+            - generic [ref=e85]: "Module not found: Can't resolve './ROOT/node_modules/stockfish/bin' <dynamic>"
+          - generic [ref=e87]:
+            - generic [ref=e89]:
+              - img [ref=e91]
+              - generic [ref=e93]: ./node_modules/stockfish
+              - button "Open in editor" [ref=e94] [cursor=pointer]:
+                - img [ref=e96]
+            - generic [ref=e100]:
+              - text: "Module not found: Can't resolve './ROOT/node_modules/stockfish/bin' <dynamic> server relative imports are not implemented yet. Please try an import relative to the file you are importing from."
+              - link "https://nextjs.org/docs/messages/module-not-found" [ref=e101] [cursor=pointer]:
+                - /url: https://nextjs.org/docs/messages/module-not-found
+        - generic [ref=e102]: "1"
+        - generic [ref=e103]: "2"
+    - generic [ref=e108] [cursor=pointer]:
+      - button "Open Next.js Dev Tools" [ref=e109]:
+        - img [ref=e110]
+      - button "Open issues overlay" [ref=e114]:
+        - generic [ref=e115]:
+          - generic [ref=e116]: "0"
+          - generic [ref=e117]: "1"
+        - generic [ref=e118]: Issue
+  - alert [ref=e30]

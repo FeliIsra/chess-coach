@@ -21,8 +21,7 @@ describe("progressReducer", () => {
       type: "progress",
       sequence: 2,
       phase: "stockfish",
-      gameIndex: 2,
-      activeGameIndex: 2,
+      activeGamesCount: 2,
       gamesCompleted: 1,
       totalGames: 5,
       moveIndex: 10,
@@ -36,8 +35,7 @@ describe("progressReducer", () => {
       type: "progress",
       sequence: 1,
       phase: "stockfish",
-      gameIndex: 0,
-      activeGameIndex: 0,
+      activeGamesCount: 1,
       gamesCompleted: 0,
       totalGames: 5,
       moveIndex: 1,
@@ -46,7 +44,8 @@ describe("progressReducer", () => {
     });
 
     expect(state).toEqual(newestState);
-    expect(state.message).toContain("Active game 3 of 5");
+    expect(state.message).toContain("Completed 1 of 5");
+    expect(state.message).toContain("2 games in flight");
   });
 
   it("derives consistent percent from completed games when percent is not provided", () => {

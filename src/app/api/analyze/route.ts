@@ -8,21 +8,27 @@ import {
 } from "@/lib/llm-coach";
 import { AnalysisProgress, ChessGame, GameAnalysis, LLMInsight } from "@/lib/types";
 
-const STOCKFISH_CONCURRENCY = 3;
-const LLM_CONCURRENCY = 4;
-const LLM_PROGRESS_EMIT_INTERVAL_MS = 700;
-const ESTIMATED_LLM_RESPONSE_CHARS = 900;
+export const runtime = "nodejs";
 
-function estimateLlmProgressPercent(
-  completed: number,
-  total: number,
-  streamedChars: number
-): number {
+function readPositiveIntEnv(name: string, fallback: number): number {
+  const value = process.env[name];
+  if (!value) return fallback;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+const STOCKFISH_CONCURRENCY = readPositiveIntEnv("STOCKFISH_CONCURRENCY", 5);
+const LLM_CONCURRENCY = readPositiveIntEnv("LLM_CONCURRENCY", 5);
+
+function estimateCompletedPercent(completed: number, total: number): number {
   if (total <= 0) return 0;
-  const completedRatio = completed / total;
-  const partialRatio =
-    Math.min(1, streamedChars / ESTIMATED_LLM_RESPONSE_CHARS) / total;
-  return Math.round(Math.min(1, completedRatio + partialRatio) * 100);
+  return Math.round((completed / total) * 100);
+}
+
+function estimateStockfishPercent(progressByGame: number[]): number {
+  if (progressByGame.length === 0) return 0;
+  const totalProgress = progressByGame.reduce((sum, value) => sum + value, 0);
+  return Math.round((totalProgress / progressByGame.length) * 100);
 }
 
 export async function POST(request: NextRequest) {
@@ -50,9 +56,13 @@ export async function POST(request: NextRequest) {
       };
 
       try {
+        const analyzeStartedAt = Date.now();
         const openai = createOpenAIClient();
         const allAnalyses: GameAnalysis[] = new Array(games.length);
         let gamesCompleted = 0;
+        const stockfishProgressByGame = new Array(games.length).fill(0);
+        const stockfishActiveGames = new Set<number>();
+        const stockfishStartedAt = Date.now();
 
         // Phase 1: Stockfish analysis — concurrent pool of STOCKFISH_CONCURRENCY
         send({
@@ -65,34 +75,40 @@ export async function POST(request: NextRequest) {
         });
 
         const analyzeOne = async (i: number) => {
-          const analysis = await analyzeGame(games[i], (moveIdx, totalMoves) => {
+          stockfishActiveGames.add(i);
+          try {
+            const analysis = await analyzeGame(games[i], (moveIdx, totalMoves) => {
+              stockfishProgressByGame[i] = moveIdx / Math.max(totalMoves, 1);
+              send({
+                type: "progress",
+                phase: "stockfish",
+                activeGamesCount: stockfishActiveGames.size,
+                totalGames: games.length,
+                gamesCompleted,
+                phaseProgressPercent: estimateStockfishPercent(stockfishProgressByGame),
+                message: `Game ${i + 1}/${games.length}: evaluating move ${moveIdx}/${totalMoves}`,
+              });
+            });
+
+            stockfishProgressByGame[i] = 1;
+            stockfishActiveGames.delete(i);
+            allAnalyses[i] = analysis;
+            gamesCompleted++;
+
             send({
-              type: "progress",
+              type: "game_complete",
               phase: "stockfish",
               gameIndex: i,
-              activeGameIndex: i,
+              activeGamesCount: stockfishActiveGames.size,
               totalGames: games.length,
-              moveIndex: moveIdx,
-              totalMoves,
               gamesCompleted,
-              phaseProgressPercent: Math.round((moveIdx / Math.max(totalMoves, 1)) * 100),
-              message: `Game ${i + 1}/${games.length}: evaluating move ${moveIdx}/${totalMoves}`,
+              phaseProgressPercent: estimateStockfishPercent(stockfishProgressByGame),
+              message: `Game ${i + 1} analyzed: ${analysis.blunders} blunders, ${analysis.mistakes} mistakes`,
+              data: analysis,
             });
-          });
-
-          allAnalyses[i] = analysis;
-          gamesCompleted++;
-
-          send({
-            type: "game_complete",
-            phase: "stockfish",
-            gameIndex: i,
-            totalGames: games.length,
-            gamesCompleted,
-            phaseProgressPercent: Math.round((gamesCompleted / games.length) * 100),
-            message: `Game ${i + 1} analyzed: ${analysis.blunders} blunders, ${analysis.mistakes} mistakes`,
-            data: analysis,
-          });
+          } finally {
+            stockfishActiveGames.delete(i);
+          }
         };
 
         // Concurrency pool
@@ -111,8 +127,10 @@ export async function POST(request: NextRequest) {
         }
 
         await Promise.all(workers);
+        const stockfishMs = Date.now() - stockfishStartedAt;
 
         // Phase 2: LLM analysis — streaming with limited concurrency
+        const llmStartedAt = Date.now();
         send({
           type: "llm_analysis",
           phase: "llm",
@@ -123,70 +141,52 @@ export async function POST(request: NextRequest) {
         });
 
         let llmCompleted = 0;
-        let llmProgressPercent = 0;
         const allInsights: LLMInsight[] = new Array(allAnalyses.length);
         const llmQueue = allAnalyses.map((_, i) => i);
+        const llmActiveGames = new Set<number>();
 
         const llmWorkers: Promise<void>[] = [];
         const totalLlmGames = allAnalyses.length;
 
         const emitLlmProgress = (progress: Omit<AnalysisProgress, "type" | "phase">) => {
-          const requestedPercent = Math.max(
-            0,
-            Math.min(100, progress.phaseProgressPercent ?? llmProgressPercent)
-          );
-          llmProgressPercent = Math.max(llmProgressPercent, requestedPercent);
           send({
             type: "llm_analysis",
             phase: "llm",
             totalGames: totalLlmGames,
             ...progress,
-            phaseProgressPercent: llmProgressPercent,
+            phaseProgressPercent:
+              progress.phaseProgressPercent ??
+              estimateCompletedPercent(llmCompleted, totalLlmGames),
           });
         };
 
         const runLlmForGame = async (i: number) => {
-          let streamedChars = 0;
-          let lastEmitAt = 0;
+          llmActiveGames.add(i);
 
           emitLlmProgress({
             gameIndex: i,
-            activeGameIndex: i,
+            activeGamesCount: llmActiveGames.size,
             gamesCompleted: llmCompleted,
-            phaseProgressPercent: llmProgressPercent,
             message: `AI reviewing game ${i + 1} of ${totalLlmGames}...`,
           });
 
-          const insight = await analyzeGameWithLLM(openai, allAnalyses[i], {
-            onDelta: (delta) => {
-              streamedChars += delta.length;
-              const now = Date.now();
-              if (now - lastEmitAt < LLM_PROGRESS_EMIT_INTERVAL_MS) return;
-              lastEmitAt = now;
+          try {
+            const insight = await analyzeGameWithLLM(openai, allAnalyses[i]);
 
-              emitLlmProgress({
-                gameIndex: i,
-                activeGameIndex: i,
-                gamesCompleted: llmCompleted,
-                phaseProgressPercent: estimateLlmProgressPercent(
-                  llmCompleted,
-                  totalLlmGames,
-                  streamedChars
-                ),
-                message: `AI reviewing game ${i + 1} of ${totalLlmGames}...`,
-              });
-            },
-          });
+            llmActiveGames.delete(i);
+            allInsights[i] = insight;
+            llmCompleted++;
 
-          allInsights[i] = insight;
-          llmCompleted++;
-
-          emitLlmProgress({
-            gameIndex: i,
-            gamesCompleted: llmCompleted,
-            phaseProgressPercent: Math.round((llmCompleted / totalLlmGames) * 100),
-            message: `AI review complete for ${llmCompleted} of ${totalLlmGames} games`,
-          });
+            emitLlmProgress({
+              gameIndex: i,
+              activeGamesCount: llmActiveGames.size,
+              gamesCompleted: llmCompleted,
+              phaseProgressPercent: estimateCompletedPercent(llmCompleted, totalLlmGames),
+              message: `AI review complete for ${llmCompleted} of ${totalLlmGames} games`,
+            });
+          } finally {
+            llmActiveGames.delete(i);
+          }
         };
 
         for (let w = 0; w < Math.min(LLM_CONCURRENCY, totalLlmGames); w++) {
@@ -202,8 +202,10 @@ export async function POST(request: NextRequest) {
         }
 
         await Promise.all(llmWorkers);
+        const llmMs = Date.now() - llmStartedAt;
 
         // Phase 3: Overall insight
+        const overallStartedAt = Date.now();
         send({
           type: "llm_analysis",
           phase: "overall",
@@ -216,6 +218,7 @@ export async function POST(request: NextRequest) {
           allAnalyses,
           allInsights
         );
+        const overallMs = Date.now() - overallStartedAt;
 
         const wins = allAnalyses.filter((a) => a.game.result === "win").length;
         const losses = allAnalyses.filter((a) => a.game.result === "loss").length;
@@ -269,7 +272,29 @@ export async function POST(request: NextRequest) {
           },
           overallInsight,
           weakSpots,
+          performance: {
+            stockfishMs,
+            llmMs,
+            overallMs,
+            analyzeTotalMs: Date.now() - analyzeStartedAt,
+            averageStockfishPerGameMs:
+              allAnalyses.length > 0 ? stockfishMs / allAnalyses.length : 0,
+            averageLlmPerGameMs:
+              allAnalyses.length > 0 ? llmMs / allAnalyses.length : 0,
+          },
         };
+
+        console.info("Analyze performance", {
+          games: allAnalyses.length,
+          stockfishMs,
+          llmMs,
+          overallMs,
+          analyzeTotalMs: result.performance.analyzeTotalMs,
+          averageStockfishPerGameMs: Math.round(result.performance.averageStockfishPerGameMs),
+          averageLlmPerGameMs: Math.round(result.performance.averageLlmPerGameMs),
+          stockfishConcurrency: STOCKFISH_CONCURRENCY,
+          llmConcurrency: LLM_CONCURRENCY,
+        });
 
         send({
           type: "done",

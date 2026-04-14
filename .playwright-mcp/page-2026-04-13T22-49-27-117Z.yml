@@ -1,0 +1,24 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]: ♞
+      - heading "Chess Coach" [level=1] [ref=e5]
+      - paragraph [ref=e6]: AI-powered analysis of your Chess.com games
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]: Chess.com Username
+        - textbox "Chess.com Username" [ref=e10]:
+          - /placeholder: e.g. hikaru
+      - generic [ref=e11]:
+        - generic [ref=e12]: "Games to analyze: 5"
+        - slider [ref=e13]: "5"
+        - generic [ref=e14]:
+          - generic [ref=e15]: "1"
+          - generic [ref=e16]: "10"
+          - generic [ref=e17]: "20"
+        - paragraph [ref=e18]: Usually about 40-70s depending on Chess.com, engine, and AI response time.
+      - button "Analyze My Games" [disabled] [ref=e19]
+    - paragraph [ref=e20]: Uses Chess.com API, Stockfish via chess-api.com, and GPT-4o-mini
+  - button "Open Next.js Dev Tools" [ref=e26] [cursor=pointer]:
+    - img [ref=e27]
+  - alert [ref=e30]

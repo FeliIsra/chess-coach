@@ -16,9 +16,10 @@ const COLORS = {
 };
 
 export default function WinRateChart({ wins, losses, draws }: WinRateChartProps) {
-  const { ref, isReady } = useContainerReady<HTMLDivElement>();
+  const { ref, isReady, width, height } = useContainerReady<HTMLDivElement>();
   const total = wins + losses + draws;
   if (total === 0) return null;
+  const winRate = Math.round((wins / total) * 100);
 
   const data = [
     { name: "Wins", value: wins },
@@ -34,9 +35,9 @@ export default function WinRateChart({ wins, losses, draws }: WinRateChartProps)
 
   return (
     <div className="flex items-center gap-4">
-      <div ref={ref} className="w-24 h-24 shrink-0 min-w-[96px]">
+      <div ref={ref} className="relative w-24 h-24 shrink-0 min-w-[96px]">
         {isReady ? (
-          <ResponsiveContainer width="100%" height="100%" minWidth={96} minHeight={96}>
+          <ResponsiveContainer width={Math.max(width, 96)} height={Math.max(height, 96)}>
             <PieChart>
               <Pie
                 data={data}
@@ -57,6 +58,12 @@ export default function WinRateChart({ wins, losses, draws }: WinRateChartProps)
         ) : (
           <div className="h-full w-full rounded-full bg-surface-2/70" />
         )}
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-lg font-bold text-foreground">{winRate}%</span>
+          <span className="text-[10px] uppercase tracking-[0.18em] text-muted">
+            win rate
+          </span>
+        </div>
       </div>
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-2">

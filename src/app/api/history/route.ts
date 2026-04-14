@@ -19,6 +19,23 @@ type AnalysisSessionRow = {
   avg_blunders_per_game: number;
 };
 
+function createHistoryFallbackResponse() {
+  return NextResponse.json({
+    sessions: [],
+    unavailable: true,
+  });
+}
+
+function createHistoryAcceptResponse() {
+  return NextResponse.json(
+    {
+      ok: false,
+      unavailable: true,
+    },
+    { status: 202 }
+  );
+}
+
 function mapRowToSession(row: AnalysisSessionRow): AnalysisSession {
   return {
     date: row.created_at,
@@ -65,8 +82,8 @@ export async function GET(request: NextRequest) {
       sessions,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to load history";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("History load unavailable", err);
+    return createHistoryFallbackResponse();
   }
 }
 
@@ -103,7 +120,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to save history";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("History save unavailable", err);
+    return createHistoryAcceptResponse();
   }
 }

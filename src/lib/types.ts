@@ -105,6 +105,17 @@ export interface WeakSpot {
   tip: string;
 }
 
+export interface AnalysisPerformanceSummary {
+  fetchMs?: number;
+  stockfishMs: number;
+  llmMs: number;
+  overallMs: number;
+  analyzeTotalMs: number;
+  endToEndMs?: number;
+  averageStockfishPerGameMs: number;
+  averageLlmPerGameMs: number;
+}
+
 export interface FullAnalysisResult {
   games: GameAnalysis[];
   llmInsights: LLMInsight[];
@@ -124,6 +135,7 @@ export interface FullAnalysisResult {
     studyPlan: string[];
   };
   weakSpots?: WeakSpot[];
+  performance?: AnalysisPerformanceSummary;
 }
 
 export interface AnalysisSession {
@@ -141,6 +153,7 @@ export interface AnalysisProgress {
   sequence?: number;
   gameIndex?: number;
   activeGameIndex?: number;
+  activeGamesCount?: number;
   totalGames?: number;
   moveIndex?: number;
   totalMoves?: number;

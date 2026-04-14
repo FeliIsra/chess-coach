@@ -34,6 +34,25 @@ interface LLMStreamOptions {
   onDelta?: (delta: string) => void;
 }
 
+function readStringEnv(name: string, fallback: string): string {
+  const value = process.env[name]?.trim();
+  return value ? value : fallback;
+}
+
+function readBooleanEnv(name: string, fallback: boolean): boolean {
+  const value = process.env[name]?.trim().toLowerCase();
+  if (!value) return fallback;
+  if (value === "1" || value === "true" || value === "yes") return true;
+  if (value === "0" || value === "false" || value === "no") return false;
+  return fallback;
+}
+
+const LLM_MODEL = readStringEnv("LLM_MODEL", "gpt-4o-mini");
+const ENABLE_LLM_OVERALL_INSIGHT = readBooleanEnv(
+  "ENABLE_LLM_OVERALL_INSIGHT",
+  false
+);
+
 export function createOpenAIClient() {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }
@@ -78,7 +97,7 @@ async function requestJsonCompletionWithStreaming(
   options?: LLMStreamOptions
 ): Promise<unknown> {
   const stream = await client.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: LLM_MODEL,
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
     temperature: 0.4,
@@ -341,7 +360,7 @@ export async function analyzeGameWithLLM(
   options?: LLMStreamOptions
 ): Promise<LLMInsight> {
   const { game, bestMoves, worstMoves } = analysis;
-  const reviewMoves = worstMoves.filter((move) => move.classification !== "good").slice(0, 6);
+  const reviewMoves = worstMoves.filter((move) => move.classification !== "good").slice(0, 4);
   const highlightMoves = bestMoves
     .filter(
       (move) =>
@@ -349,7 +368,7 @@ export async function analyzeGameWithLLM(
         move.classification === "great" ||
         move.evalDiff >= 15
     )
-    .slice(0, 4);
+    .slice(0, 2);
 
   const prompt = `You are a precise chess coach for beginner/intermediate players (rating ~${game.userRating}).
 Analyze this ${game.timeClass} game where the player played as ${game.userColor} against ${game.opponentName} (${game.opponentRating}).
@@ -367,7 +386,7 @@ Respond in JSON format with this exact structure:
     {
       "move": "the move in SAN",
       "moveNumber": 5,
-      "explanation": "2-3 sentences. Explain the concrete consequence and what line was better.",
+      "explanation": "1-2 short sentences. Explain the concrete consequence and what line was better.",
       "concept": "The chess concept to study (e.g., 'knight forks', 'back rank safety', 'piece activity')",
       "category": "One of: tactics | piece safety | king safety | pawn structure | endgame | opening | positional | time management"
     }
@@ -376,7 +395,7 @@ Respond in JSON format with this exact structure:
     {
       "move": "the move in SAN",
       "moveNumber": 12,
-      "explanation": "2-3 sentences. Explain exactly what this move improved.",
+      "explanation": "1-2 short sentences. Explain exactly what this move improved.",
       "concept": "The chess concept demonstrated"
     }
   ],
@@ -392,6 +411,7 @@ Rules:
 - For each bad move, state what was lost (material, king safety, initiative, structure, endgame quality).
 - Never write psychological assumptions like "you probably thought" or "you likely thought".
 - Do not overpraise neutral moves. If the gain is small, describe it as "solid" instead of "excellent".
+- Keep every field concise. Prefer one precise sentence over multiple generic ones.
 - Improvement plan items must be specific drills tied to this game.`;
 
   const parsed = await requestJsonCompletionWithStreaming(client, prompt, options);
@@ -476,6 +496,94 @@ function sanitizeOverallInsight(
   };
 }
 
+const DEFAULT_WEAK_SPOT_TIPS: Record<string, string> = {
+  tactics:
+    "Do 10 short tactical puzzles and verbalize the forcing line before moving.",
+  "piece safety":
+    "Before each move, scan for loose pieces and undefended squares on both sides.",
+  "king safety":
+    "Delay side attacks until your king is safe and your opponent's forcing checks are covered.",
+  "pawn structure":
+    "Review the pawn breaks from these games and note which weaknesses they created.",
+  endgame:
+    "Replay the late phase slowly and practice converting or holding similar endgames.",
+  opening:
+    "Narrow your opening choices and memorize the first safe setup instead of chasing sidelines.",
+  positional:
+    "Pause on quiet moves and ask which piece improves most without creating new targets.",
+  "time management":
+    "Bank a little time in simple positions so critical tactical moments are not rushed.",
+};
+
+function dedupeNormalized(items: string[], maxItems: number): string[] {
+  const output: string[] = [];
+  const seen = new Set<string>();
+
+  for (const item of items) {
+    const normalized = normalizeText(item);
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    output.push(item);
+    if (output.length >= maxItems) break;
+  }
+
+  return output;
+}
+
+function buildFastOverallInsight(
+  analyses: GameAnalysis[],
+  insights: LLMInsight[],
+  weakSpots: WeakSpot[]
+): OverallInsightResponse {
+  const totalBlunders = analyses.reduce((sum, analysis) => sum + analysis.blunders, 0);
+  const totalMistakes = analyses.reduce((sum, analysis) => sum + analysis.mistakes, 0);
+  const topStrengths = dedupeNormalized(
+    insights.flatMap((insight) => insight.strengths),
+    3
+  );
+  const topWeaknesses = dedupeNormalized(
+    [
+      ...weakSpots.map((spot) => `${spot.category} keeps showing up across your recent errors.`),
+      ...insights.flatMap((insight) => insight.weaknesses),
+    ],
+    3
+  );
+
+  const primaryWeakSpot = weakSpots[0]?.category ?? "tactics";
+  const summary =
+    analyses.length > 0
+      ? `Across ${analyses.length} recent games, the biggest drag on results is ${primaryWeakSpot}. You gave away ${totalBlunders} blunders and ${totalMistakes} mistakes, so the fastest improvement comes from reducing avoidable tactical damage before expanding your opening work.`
+      : "Recent games show recurring tactical damage that should be your first training priority.";
+
+  const studyPlan = dedupeNormalized(
+    [
+      ...weakSpots.slice(0, 3).map((spot) => DEFAULT_WEAK_SPOT_TIPS[spot.category] ?? "Review recent examples of this theme and solve 5 focused puzzles."),
+      "Review your top three blunders and write the engine move before replaying the line.",
+      "Play the next training game slightly slower and force a threat scan before every critical move.",
+    ],
+    5
+  );
+
+  return {
+    summary,
+    topStrengths:
+      topStrengths.length > 0
+        ? topStrengths
+        : ["You still reach playable positions when the game stays calm and structured."],
+    topWeaknesses:
+      topWeaknesses.length > 0
+        ? topWeaknesses
+        : ["Critical tactical moments are still costing too much material and initiative."],
+    studyPlan,
+    weakSpotTips: weakSpots.map((spot) => ({
+      category: spot.category,
+      tip:
+        DEFAULT_WEAK_SPOT_TIPS[spot.category] ??
+        "Review two recent examples of this theme and solve 5 focused puzzles.",
+    })),
+  };
+}
+
 export async function generateOverallInsight(
   client: OpenAI,
   analyses: GameAnalysis[],
@@ -490,6 +598,9 @@ export async function generateOverallInsight(
   const allStrengths = insights.flatMap((i) => i.strengths);
   const allWeaknesses = insights.flatMap((i) => i.weaknesses);
   const weakSpots = aggregateWeakSpots(insights);
+  if (!ENABLE_LLM_OVERALL_INSIGHT) {
+    return buildFastOverallInsight(analyses, insights, weakSpots);
+  }
   const weakSpotsText =
     weakSpots.length > 0
       ? `\n## Tactical Weak Spots (by error frequency):\n${weakSpots.map((ws) => `- ${ws.category}: ${ws.count} errors`).join("\n")}`

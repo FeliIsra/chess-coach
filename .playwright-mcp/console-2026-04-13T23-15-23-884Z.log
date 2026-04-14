@@ -1,0 +1,140 @@
+[      -3ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/srcstockfish.js'
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[      -3ms] [ERROR] ./node_modules/stockfish/index.js:25:23
+Module not found: Can't resolve (<dynamic> | 'null' | '/ROOT/node_modules/stockfish/bin/stockfish.js' | '/ROOT/node_modules/stockfish/binstockfish.js' | '/ROOT/node_modules/stockfish/bin/' <dynamic> | '/ROOT/node_modules/stockfish/bin' <dynamic> | '/ROOT/node_modules/stockfish/src/stockfish.js' | '/ROOT/node_modules/stockfish/srcstockfish.js' | '/ROOT/node_modules/stockfish/src/' <dynamic> | '/ROOT/node_modules/stockfish/src' <dynamic> | 'undefined')
+  23 |     var buffers = [];
+  24 |     
+> 25 |     var INIT_ENGINE = require(pathToEngine);
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+  26 |     
+  27 |     var res;
+  28 |     var rej;
+
+Import trace:
+  App Route:
+    ./node_modules/stockfish/index.js
+    ./src/lib/local-stockfish.ts
+    ./src/lib/analyzer.ts
+    ./src/app/api/analyze/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     107ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/bin' <dynamic>
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     107ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/bin/' <dynamic>
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     107ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/bin/stockfish.js'
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     107ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/binstockfish.js'
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     107ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/src' <dynamic>
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     107ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/src/' <dynamic>
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     107ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/src/stockfish.js'
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     107ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/srcstockfish.js'
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     107ms] [ERROR] ./node_modules/stockfish/index.js:25:23
+Module not found: Can't resolve (<dynamic> | 'null' | '/ROOT/node_modules/stockfish/bin/stockfish.js' | '/ROOT/node_modules/stockfish/binstockfish.js' | '/ROOT/node_modules/stockfish/bin/' <dynamic> | '/ROOT/node_modules/stockfish/bin' <dynamic> | '/ROOT/node_modules/stockfish/src/stockfish.js' | '/ROOT/node_modules/stockfish/srcstockfish.js' | '/ROOT/node_modules/stockfish/src/' <dynamic> | '/ROOT/node_modules/stockfish/src' <dynamic> | 'undefined')
+  23 |     var buffers = [];
+  24 |     
+> 25 |     var INIT_ENGINE = require(pathToEngine);
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+  26 |     
+  27 |     var res;
+  28 |     var rej;
+
+Import trace:
+  App Route:
+    ./node_modules/stockfish/index.js
+    ./src/lib/local-stockfish.ts
+    ./src/lib/analyzer.ts
+    ./src/app/api/analyze/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     113ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:2297
+[     195ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/bin' <dynamic>
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     195ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/bin/' <dynamic>
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     195ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/bin/stockfish.js'
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     195ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/binstockfish.js'
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     195ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/src' <dynamic>
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     195ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/src/' <dynamic>
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     195ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/src/stockfish.js'
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     195ms] [ERROR] ./node_modules/stockfish
+Module not found: Can't resolve './ROOT/node_modules/stockfish/srcstockfish.js'
+server relative imports are not implemented yet. Please try an import relative to the file you are importing from.
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
+[     195ms] [ERROR] ./node_modules/stockfish/index.js:25:23
+Module not found: Can't resolve (<dynamic> | 'null' | '/ROOT/node_modules/stockfish/bin/stockfish.js' | '/ROOT/node_modules/stockfish/binstockfish.js' | '/ROOT/node_modules/stockfish/bin/' <dynamic> | '/ROOT/node_modules/stockfish/bin' <dynamic> | '/ROOT/node_modules/stockfish/src/stockfish.js' | '/ROOT/node_modules/stockfish/srcstockfish.js' | '/ROOT/node_modules/stockfish/src/' <dynamic> | '/ROOT/node_modules/stockfish/src' <dynamic> | 'undefined')
+  23 |     var buffers = [];
+  24 |     
+> 25 |     var INIT_ENGINE = require(pathToEngine);
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+  26 |     
+  27 |     var res;
+  28 |     var rej;
+
+Import trace:
+  App Route:
+    ./node_modules/stockfish/index.js
+    ./src/lib/local-stockfish.ts
+    ./src/lib/analyzer.ts
+    ./src/app/api/analyze/route.ts
+
+https://nextjs.org/docs/messages/module-not-found @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127

@@ -1,0 +1,12 @@
+[     204ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3200/api/history:0
+[     204ms] [ERROR] Failed to load progress summary TypeError: Failed to fetch
+    at jF (http://127.0.0.1:3200/_next/static/chunks/9b6c616dc2fd2af5.js:1:512240)
+    at http://127.0.0.1:3200/_next/static/chunks/9b6c616dc2fd2af5.js:1:512539
+    at ih (http://127.0.0.1:3200/_next/static/chunks/f2f58a7e93290fbb.js:1:102174)
+    at uf (http://127.0.0.1:3200/_next/static/chunks/f2f58a7e93290fbb.js:1:126024)
+    at uc (http://127.0.0.1:3200/_next/static/chunks/f2f58a7e93290fbb.js:1:125686)
+    at uf (http://127.0.0.1:3200/_next/static/chunks/f2f58a7e93290fbb.js:1:126069)
+    at uc (http://127.0.0.1:3200/_next/static/chunks/f2f58a7e93290fbb.js:1:125686)
+    at uf (http://127.0.0.1:3200/_next/static/chunks/f2f58a7e93290fbb.js:1:126004)
+    at uc (http://127.0.0.1:3200/_next/static/chunks/f2f58a7e93290fbb.js:1:125686)
+    at uf (http://127.0.0.1:3200/_next/static/chunks/f2f58a7e93290fbb.js:1:126004) @ http://127.0.0.1:3200/_next/static/chunks/9b6c616dc2fd2af5.js:0

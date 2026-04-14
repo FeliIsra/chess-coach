@@ -1,0 +1,52 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]: ♞
+      - heading "Chess Coach" [level=1] [ref=e5]
+      - paragraph [ref=e6]: AI-powered analysis of your Chess.com games
+    - generic [ref=e7]:
+      - generic [ref=e8]:
+        - generic [ref=e9]: Chess.com Username
+        - textbox "Chess.com Username" [disabled] [ref=e10]:
+          - /placeholder: e.g. hikaru
+          - text: Feliisra
+      - generic [ref=e11]:
+        - generic [ref=e12]: "Games to analyze: 5"
+        - slider [disabled] [ref=e13]: "5"
+        - generic [ref=e14]:
+          - generic [ref=e15]: "1"
+          - generic [ref=e16]: "10"
+          - generic [ref=e17]: "20"
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - generic [ref=e42]:
+            - generic [ref=e43]: ♟
+            - generic [ref=e44]: Fetch
+          - generic [ref=e46]:
+            - generic [ref=e47]: ⚙
+            - generic [ref=e48]: Engine
+          - generic [ref=e50]:
+            - generic [ref=e51]: ♞
+            - generic [ref=e52]: AI Review
+          - generic [ref=e54]:
+            - generic [ref=e55]: ♔
+            - generic [ref=e56]: Done
+        - generic [ref=e57]:
+          - generic [ref=e58]:
+            - generic [ref=e59]: Game 2 progress
+            - generic [ref=e60]: 29%
+          - paragraph [ref=e63]: "Games finished: 0 / 5"
+        - paragraph [ref=e66]: Engine analyzing your games. Completed 0 of 5. Active game 2 of 5. Move 6/21.
+    - paragraph [ref=e19]: Uses Chess.com API, Stockfish via chess-api.com, and GPT-4o-mini
+  - generic [ref=e25] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e26]:
+      - img [ref=e27]
+    - generic [ref=e30]:
+      - button "Open issues overlay" [ref=e31]:
+        - generic [ref=e32]:
+          - generic [ref=e33]: "0"
+          - generic [ref=e34]: "1"
+        - generic [ref=e35]: Issue
+      - button "Collapse issues badge" [ref=e36]:
+        - img [ref=e37]
+  - alert [ref=e20]

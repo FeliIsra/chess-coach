@@ -6,6 +6,7 @@ export interface ProgressState {
   currentPhase: ProgressPhase;
   gamesCompleted: number;
   totalGames: number;
+  activeGamesCount: number;
   message: string;
   lastCompletedMessage: string;
   latestSequence: number;
@@ -24,6 +25,7 @@ export const initialProgressState: ProgressState = {
   currentPhase: "fetching",
   gamesCompleted: 0,
   totalGames: 0,
+  activeGamesCount: 0,
   message: "",
   lastCompletedMessage: "",
   latestSequence: 0,
@@ -38,29 +40,33 @@ function clampPercent(value: number): number {
 function buildStockfishMessage(
   gamesCompleted: number,
   totalGames: number,
-  activeGameIndex: number | null,
-  moveIndex?: number,
-  totalMoves?: number
+  activeGamesCount: number
 ): string {
   if (totalGames <= 0) {
     return "Engine analyzing your games...";
   }
 
-  const completedPart = `Completed ${gamesCompleted} of ${totalGames}.`;
-  if (activeGameIndex === null) {
-    return `Engine analyzing your games. ${completedPart}`;
-  }
-
-  const movePart =
-    moveIndex && totalMoves ? ` Move ${moveIndex}/${totalMoves}.` : "";
-  return `Engine analyzing your games. ${completedPart} Active game ${activeGameIndex + 1} of ${totalGames}.${movePart}`;
+  const activePart =
+    activeGamesCount > 0
+      ? ` ${activeGamesCount} game${activeGamesCount === 1 ? "" : "s"} in flight.`
+      : "";
+  return `Engine analyzing your games. Completed ${gamesCompleted} of ${totalGames}.${activePart}`;
 }
 
-function buildLlmMessage(gamesCompleted: number, totalGames: number): string {
+function buildLlmMessage(
+  gamesCompleted: number,
+  totalGames: number,
+  activeGamesCount: number
+): string {
   if (totalGames <= 0) {
     return "AI coach reviewing your games...";
   }
-  return `AI coach reviewing patterns. Completed ${gamesCompleted} of ${totalGames}.`;
+
+  const activePart =
+    activeGamesCount > 0
+      ? ` ${activeGamesCount} review${activeGamesCount === 1 ? "" : "s"} in flight.`
+      : "";
+  return `AI coach reviewing patterns. Completed ${gamesCompleted} of ${totalGames}.${activePart}`;
 }
 
 function resolveSequence(state: ProgressState, update: AnalysisProgress): number {
@@ -97,6 +103,7 @@ export function progressReducer(
       currentPhase: "stockfish",
       totalGames: action.totalGames,
       gamesCompleted: 0,
+      activeGamesCount: 0,
       activeGameIndex: null,
       phaseProgressPercent: 0,
       message: `Starting engine analysis of ${action.totalGames} games...`,
@@ -109,6 +116,7 @@ export function progressReducer(
       ...state,
       currentPhase: "done",
       gamesCompleted: state.totalGames,
+      activeGamesCount: 0,
       phaseProgressPercent: 100,
       activeGameIndex: null,
       message: "Analysis complete.",
@@ -124,10 +132,16 @@ export function progressReducer(
   const currentPhase = resolvePhase(state.currentPhase, update.phase);
   const totalGames = update.totalGames ?? state.totalGames;
   const gamesCompleted = update.gamesCompleted ?? state.gamesCompleted;
+  const activeGamesCount =
+    currentPhase === "stockfish" || currentPhase === "llm"
+      ? update.activeGamesCount ?? state.activeGamesCount
+      : 0;
 
   let activeGameIndex = state.activeGameIndex;
   if (currentPhase === "stockfish") {
-    if (update.activeGameIndex !== undefined) {
+    if (activeGamesCount > 1) {
+      activeGameIndex = null;
+    } else if (update.activeGameIndex !== undefined) {
       activeGameIndex = update.activeGameIndex;
     } else if (update.gameIndex !== undefined) {
       activeGameIndex = update.gameIndex;
@@ -154,12 +168,10 @@ export function progressReducer(
     message = buildStockfishMessage(
       gamesCompleted,
       totalGames,
-      activeGameIndex,
-      update.moveIndex,
-      update.totalMoves
+      activeGamesCount
     );
   } else if (currentPhase === "llm") {
-    message = buildLlmMessage(gamesCompleted, totalGames);
+    message = buildLlmMessage(gamesCompleted, totalGames, activeGamesCount);
   } else if (currentPhase === "overall") {
     message = "Building your study plan...";
     phaseProgressPercent = 100;
@@ -170,6 +182,7 @@ export function progressReducer(
     currentPhase,
     totalGames,
     gamesCompleted,
+    activeGamesCount,
     activeGameIndex,
     phaseProgressPercent,
     latestSequence: sequence,

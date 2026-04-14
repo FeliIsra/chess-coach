@@ -10,6 +10,12 @@ import { initialProgressState, progressReducer } from "@/lib/progress-state";
 
 type Stage = "input" | "fetching" | "analyzing" | "done" | "error";
 
+function getEstimatedDurationLabel(gameCount: number): string {
+  const minSeconds = Math.max(15, gameCount * 8);
+  const maxSeconds = Math.max(25, gameCount * 14);
+  return `Usually about ${minSeconds}-${maxSeconds}s depending on Chess.com, engine, and AI response time.`;
+}
+
 export default function Home() {
   const [username, setUsername] = useState("");
   const [gameCount, setGameCount] = useState(5);
@@ -24,6 +30,7 @@ export default function Home() {
   const handleAnalyze = async () => {
     if (!username.trim()) return;
 
+    const requestStartedAt = Date.now();
     setStage("fetching");
     setError("");
     dispatchProgress({
@@ -32,10 +39,12 @@ export default function Home() {
     });
 
     try {
+      const gamesFetchStartedAt = Date.now();
       const gamesRes = await fetch(
         `/api/games?username=${encodeURIComponent(username)}&count=${gameCount}`
       );
       const gamesData = await gamesRes.json();
+      const fetchMs = Date.now() - gamesFetchStartedAt;
 
       if (!gamesRes.ok) {
         throw new Error(gamesData.error || "Failed to fetch games");
@@ -52,6 +61,7 @@ export default function Home() {
         totalGames: games.length,
       });
 
+      const analyzeStartedAt = Date.now();
       const analyzeRes = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -86,7 +96,25 @@ export default function Home() {
             }
 
             if (update.type === "done") {
-              const fullResult = update.data as FullAnalysisResult;
+              const serverResult = update.data as FullAnalysisResult;
+              const fullResult: FullAnalysisResult = {
+                ...serverResult,
+                performance: {
+                  ...serverResult.performance,
+                  fetchMs,
+                  endToEndMs: Date.now() - requestStartedAt,
+                  analyzeTotalMs:
+                    serverResult.performance?.analyzeTotalMs ??
+                    Date.now() - analyzeStartedAt,
+                  stockfishMs: serverResult.performance?.stockfishMs ?? 0,
+                  llmMs: serverResult.performance?.llmMs ?? 0,
+                  overallMs: serverResult.performance?.overallMs ?? 0,
+                  averageStockfishPerGameMs:
+                    serverResult.performance?.averageStockfishPerGameMs ?? 0,
+                  averageLlmPerGameMs:
+                    serverResult.performance?.averageLlmPerGameMs ?? 0,
+                },
+              };
               setResult(fullResult);
               setStage("done");
               dispatchProgress({ type: "done" });
@@ -174,6 +202,9 @@ export default function Home() {
             <span>10</span>
             <span>20</span>
           </div>
+          <p className="mt-2 text-xs text-muted">
+            {getEstimatedDurationLabel(gameCount)}
+          </p>
         </div>
 
         {/* Error */}
@@ -189,6 +220,7 @@ export default function Home() {
             currentPhase={progressState.currentPhase}
             gamesCompleted={progressState.gamesCompleted}
             totalGames={progressState.totalGames}
+            activeGamesCount={progressState.activeGamesCount}
             phaseProgressPercent={progressState.phaseProgressPercent}
             activeGameIndex={progressState.activeGameIndex}
             message={progressState.message}

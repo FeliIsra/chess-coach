@@ -18,10 +18,9 @@ export default function ResultsView({ result, onReset }: Props) {
   const [showPuzzles, setShowPuzzles] = useState(false);
   const [activePuzzleIds, setActivePuzzleIds] = useState<string[] | null>(null);
   const [initialPuzzleIndex, setInitialPuzzleIndex] = useState(0);
-  const { overallSummary, overallInsight, games, llmInsights, weakSpots } = result;
+  const { overallSummary, overallInsight, games, llmInsights, weakSpots, performance } = result;
 
   const puzzles = useMemo(() => extractPuzzles(games, llmInsights), [games, llmInsights]);
-  const primaryUserColor = games[0]?.game.userColor ?? "white";
   const focusAreas = overallInsight?.topWeaknesses?.slice(0, 3) ?? [];
   const nextSteps = overallInsight?.studyPlan?.slice(0, 3) ?? [];
   const visiblePuzzles = useMemo(() => {
@@ -77,7 +76,6 @@ export default function ResultsView({ result, onReset }: Props) {
         <PuzzleTrainer
           key={`${activePuzzleIds?.join(",") ?? "all"}:${initialPuzzleIndex}`}
           puzzles={visiblePuzzles}
-          userColor={primaryUserColor}
           initialIndex={Math.min(initialPuzzleIndex, Math.max(visiblePuzzles.length - 1, 0))}
           onClose={() => setShowPuzzles(false)}
         />
@@ -134,6 +132,55 @@ export default function ResultsView({ result, onReset }: Props) {
                 Clock management is a real leak in these games.
               </p>
             )}
+          </div>
+        )}
+
+        {performance && (
+          <div className="mt-3 pt-3 border-t border-border">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted mb-2">
+              Performance
+            </p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {performance.fetchMs !== undefined && (
+                <StatCard
+                  label="Fetch"
+                  value={formatTimingLabel(performance.fetchMs)}
+                  color="text-foreground"
+                />
+              )}
+              <StatCard
+                label="Engine"
+                value={formatTimingLabel(performance.stockfishMs)}
+                color="text-foreground"
+              />
+              <StatCard
+                label="AI"
+                value={formatTimingLabel(performance.llmMs)}
+                color="text-foreground"
+              />
+              <StatCard
+                label="Plan"
+                value={formatTimingLabel(performance.overallMs)}
+                color="text-foreground"
+              />
+              <StatCard
+                label="Analyze"
+                value={formatTimingLabel(performance.analyzeTotalMs)}
+                color="text-primary"
+              />
+              {performance.endToEndMs !== undefined && (
+                <StatCard
+                  label="End-to-End"
+                  value={formatTimingLabel(performance.endToEndMs)}
+                  color="text-primary"
+                />
+              )}
+            </div>
+            <p className="text-xs text-muted mt-2">
+              Avg engine/game {formatTimingLabel(performance.averageStockfishPerGameMs)}
+              {" · "}
+              avg AI/game {formatTimingLabel(performance.averageLlmPerGameMs)}
+            </p>
           </div>
         )}
       </div>
@@ -315,6 +362,13 @@ export default function ResultsView({ result, onReset }: Props) {
       </div>
     </main>
   );
+}
+
+function formatTimingLabel(ms: number): string {
+  if (ms >= 1000) {
+    return `${(ms / 1000).toFixed(ms >= 10000 ? 0 : 1)}s`;
+  }
+  return `${Math.round(ms)}ms`;
 }
 
 function StatCard({

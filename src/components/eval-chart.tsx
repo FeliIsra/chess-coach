@@ -17,7 +17,7 @@ interface EvalChartProps {
 }
 
 export default function EvalChart({ moves }: EvalChartProps) {
-  const { ref, isReady } = useContainerReady<HTMLDivElement>();
+  const { ref, isReady, width, height } = useContainerReady<HTMLDivElement>();
   if (moves.length === 0) return null;
 
   const data = moves.map((m) => ({
@@ -29,7 +29,10 @@ export default function EvalChart({ moves }: EvalChartProps) {
   return (
     <div ref={ref} className="w-full min-w-0 h-[120px]">
       {isReady ? (
-        <ResponsiveContainer width="100%" height="100%" minWidth={280} minHeight={120}>
+        <ResponsiveContainer
+          width={Math.max(width, 280)}
+          height={Math.max(height, 120)}
+        >
           <AreaChart data={data} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
             <defs>
               <linearGradient id="evalGreen" x1="0" y1="0" x2="0" y2="1">

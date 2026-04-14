@@ -6,6 +6,7 @@ import { loadHistory, getTrend } from "@/lib/history";
 
 export default function ProgressSummary() {
   const [sessions, setSessions] = useState<AnalysisSession[]>([]);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -14,10 +15,14 @@ export default function ProgressSummary() {
       .then((history) => {
         if (!cancelled) {
           setSessions(history);
+          setHasLoaded(true);
         }
       })
       .catch((error) => {
-        console.error("Failed to load progress summary", error);
+        if (!cancelled) {
+          console.error("Failed to load progress summary", error);
+          setHasLoaded(true);
+        }
       });
 
     return () => {
@@ -25,7 +30,25 @@ export default function ProgressSummary() {
     };
   }, []);
 
-  if (sessions.length === 0) return null;
+  if (!hasLoaded) return null;
+
+  if (sessions.length === 0) {
+    return (
+      <div className="w-full max-w-md bg-surface-1 rounded-2xl border border-border p-4 mb-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Your Progress</h3>
+            <p className="text-xs text-muted mt-1">
+              Finish a few analyses and this area will start showing trend lines.
+            </p>
+          </div>
+          <span className="text-xs uppercase tracking-[0.18em] text-muted">
+            empty
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   const trend = getTrend(sessions);
   const recent = sessions.slice(-10);

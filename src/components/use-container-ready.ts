@@ -8,7 +8,7 @@ export function isContainerRenderable(width: number, height: number): boolean {
 
 export function useContainerReady<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
-  const [isReady, setIsReady] = useState(false);
+  const [size, setSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     const element = ref.current;
@@ -16,7 +16,12 @@ export function useContainerReady<T extends HTMLElement>() {
 
     const update = () => {
       const { width, height } = element.getBoundingClientRect();
-      setIsReady(isContainerRenderable(width, height));
+      setSize((current) => {
+        if (current.width === width && current.height === height) {
+          return current;
+        }
+        return { width, height };
+      });
     };
 
     update();
@@ -35,5 +40,10 @@ export function useContainerReady<T extends HTMLElement>() {
     };
   }, []);
 
-  return { ref, isReady };
+  return {
+    ref,
+    width: size.width,
+    height: size.height,
+    isReady: isContainerRenderable(size.width, size.height),
+  };
 }

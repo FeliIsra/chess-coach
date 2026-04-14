@@ -6,6 +6,8 @@ const HEADERS = {
   "User-Agent": "ChessCoach/1.0 (chess improvement app)",
   Accept: "application/json",
 };
+const ARCHIVE_FETCH_CONCURRENCY = 4;
+const CHESS_COM_TIMEOUT_MS = 6000;
 
 const WINNING_RESULTS = new Set(["win"]);
 const LOSING_RESULTS = new Set([
@@ -18,6 +20,7 @@ const LOSING_RESULTS = new Set([
 export async function validateUser(username: string): Promise<boolean> {
   const res = await fetch(`${BASE_URL}/player/${username.toLowerCase()}`, {
     headers: HEADERS,
+    signal: AbortSignal.timeout(CHESS_COM_TIMEOUT_MS),
   });
   return res.ok;
 }
@@ -31,7 +34,10 @@ export async function fetchRecentGames(
   // Get archives list
   const archivesRes = await fetch(
     `${BASE_URL}/player/${lowerUser}/games/archives`,
-    { headers: HEADERS }
+    {
+      headers: HEADERS,
+      signal: AbortSignal.timeout(CHESS_COM_TIMEOUT_MS),
+    }
   );
   if (!archivesRes.ok) {
     throw new Error(`Player "${username}" not found`);
@@ -42,22 +48,33 @@ export async function fetchRecentGames(
     throw new Error(`No games found for "${username}"`);
   }
 
-  // Fetch from most recent months until we have enough games
+  // Fetch most recent archive months in small concurrent batches.
+  const archivesNewestFirst = [...archives].reverse();
   const allGames: ChessGame[] = [];
-  for (let i = archives.length - 1; i >= 0 && allGames.length < count; i--) {
-    const monthRes = await fetch(archives[i], { headers: HEADERS });
-    if (!monthRes.ok) continue;
+  for (
+    let i = 0;
+    i < archivesNewestFirst.length && allGames.length < count;
+    i += ARCHIVE_FETCH_CONCURRENCY
+  ) {
+    const batch = archivesNewestFirst.slice(i, i + ARCHIVE_FETCH_CONCURRENCY);
+    const monthGamesBatch = await Promise.all(
+      batch.map(async (archiveUrl) => {
+        const monthRes = await fetch(archiveUrl, {
+          headers: HEADERS,
+          signal: AbortSignal.timeout(CHESS_COM_TIMEOUT_MS),
+        });
+        if (!monthRes.ok) return [] as ChessComGame[];
+        const { games } = (await monthRes.json()) as { games: ChessComGame[] };
+        return games.filter((g) => g.rules === "chess").reverse();
+      })
+    );
 
-    const { games } = (await monthRes.json()) as { games: ChessComGame[] };
-
-    // Filter to standard chess only, most recent first
-    const standardGames = games
-      .filter((g) => g.rules === "chess")
-      .reverse();
-
-    for (const game of standardGames) {
+    for (const monthGames of monthGamesBatch) {
+      for (const game of monthGames) {
+        if (allGames.length >= count) break;
+        allGames.push(toChessGame(game, lowerUser));
+      }
       if (allGames.length >= count) break;
-      allGames.push(toChessGame(game, lowerUser));
     }
   }
 

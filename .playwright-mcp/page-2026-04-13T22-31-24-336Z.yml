@@ -1,0 +1,384 @@
+- generic [ref=e1]:
+  - generic [ref=e25] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e26]:
+      - img [ref=e27]
+    - generic [ref=e30]:
+      - button "Open issues overlay" [ref=e31]:
+        - generic [ref=e68]:
+          - generic [ref=e69]: "1"
+          - generic [ref=e70]: "2"
+        - generic [ref=e35]:
+          - text: Issue
+          - generic [ref=e71]: s
+      - button "Collapse issues badge" [ref=e36]:
+        - img [ref=e37]
+  - alert [ref=e20]
+  - main [ref=e72]:
+    - generic [ref=e73]:
+      - generic [ref=e74]:
+        - heading "Your Analysis" [level=1] [ref=e75]
+        - paragraph [ref=e76]: 5 games analyzed
+      - button "New Analysis" [ref=e77]
+    - generic [ref=e78]:
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - application [ref=e84]
+          - generic [ref=e92]:
+            - generic [ref=e95]: 1 Win
+            - generic [ref=e98]: 4 Losses
+        - generic [ref=e99]:
+          - generic [ref=e100]:
+            - paragraph [ref=e101]: "28"
+            - paragraph [ref=e102]: Blunders
+          - generic [ref=e103]:
+            - paragraph [ref=e104]: "15"
+            - paragraph [ref=e105]: Mistakes
+          - generic [ref=e106]:
+            - paragraph [ref=e107]: 16%
+            - paragraph [ref=e108]: Average Accuracy
+      - paragraph [ref=e110]:
+        - generic [ref=e111]: 0%
+        - text: of your errors happened under time pressure
+    - generic [ref=e112]:
+      - heading "What To Fix First" [level=2] [ref=e113]
+      - generic [ref=e114]:
+        - paragraph [ref=e115]: Your recent games indicate a significant struggle with tactical awareness and king safety, which has led to a high number of blunders. While you demonstrate a solid understanding of opening principles and piece development, these strengths are often undermined by tactical oversights and inadequate responses to threats. Improving your tactical skills and maintaining king safety should be your primary focus moving forward.
+        - generic [ref=e116]:
+          - heading "Top recurring problems" [level=3] [ref=e117]
+          - list [ref=e118]:
+            - listitem [ref=e119]:
+              - generic [ref=e120]: "1."
+              - text: Neglecting king safety, leading to immediate threats
+            - listitem [ref=e121]:
+              - generic [ref=e122]: "2."
+              - text: Struggled with tactical awareness, leading to significant blunders
+            - listitem [ref=e123]:
+              - generic [ref=e124]: "3."
+              - text: Lack of awareness regarding the consequences of piece placement
+        - generic [ref=e125]:
+          - heading "Keep doing this" [level=3] [ref=e126]
+          - list [ref=e127]:
+            - listitem [ref=e128]:
+              - generic [ref=e129]: +
+              - text: Ability to develop pieces quickly in the opening phase
+            - listitem [ref=e130]:
+              - generic [ref=e131]: +
+              - text: Understanding of basic opening principles
+            - listitem [ref=e132]:
+              - generic [ref=e133]: +
+              - text: Demonstrated ability to capitalize on opponent's mistakes
+        - generic [ref=e134]:
+          - heading "Next training block" [level=3] [ref=e135]
+          - list [ref=e136]:
+            - listitem [ref=e137]:
+              - generic [ref=e138]: "1."
+              - text: Solve 10 tactical puzzles daily focusing on common patterns and themes.
+            - listitem [ref=e139]:
+              - generic [ref=e140]: "2."
+              - text: Review and analyze your own games to identify specific tactical mistakes and missed opportunities.
+            - listitem [ref=e141]:
+              - generic [ref=e142]: "3."
+              - text: Study king safety principles, including common checkmating patterns and defensive techniques.
+        - button "Start With 5 mistake puzzles" [ref=e143]
+    - generic [ref=e144]:
+      - heading "Train By Theme" [level=2] [ref=e145]
+      - generic [ref=e146]:
+        - generic [ref=e147]:
+          - generic [ref=e148]:
+            - generic [ref=e149]: tactics
+            - generic [ref=e150]: "9"
+          - paragraph [ref=e151]: Regularly practice tactical puzzles to sharpen your recognition of threats and opportunities.
+          - button "Practice this theme" [ref=e152]
+        - generic [ref=e153]:
+          - generic [ref=e154]:
+            - generic [ref=e155]: positional
+            - generic [ref=e156]: "8"
+          - paragraph [ref=e157]: Analyze your games to understand the impact of piece placement and its consequences.
+          - button "Practice this theme" [ref=e158]
+        - generic [ref=e159]:
+          - generic [ref=e160]:
+            - generic [ref=e161]: opening
+            - generic [ref=e162]: "3"
+          - paragraph [ref=e163]: Focus on mastering a few openings to improve consistency in piece development and central control.
+          - button "Practice this theme" [ref=e164]
+        - generic [ref=e165]:
+          - generic [ref=e166]:
+            - generic [ref=e167]: pawn structure
+            - generic [ref=e168]: "2"
+          - paragraph [ref=e169]: Study pawn structure fundamentals to understand how to maintain a strong formation.
+          - button "Practice this theme" [ref=e170]
+        - generic [ref=e171]:
+          - generic [ref=e172]:
+            - generic [ref=e173]: endgame
+            - generic [ref=e174]: "2"
+          - paragraph [ref=e175]: Practice basic endgame scenarios to improve your king safety and checkmating techniques.
+          - button "Practice this theme" [ref=e176]
+    - generic [ref=e177]:
+      - heading "Your Openings" [level=2] [ref=e178]
+      - generic [ref=e179]:
+        - generic [ref=e180]:
+          - generic [ref=e181]:
+            - paragraph [ref=e182]: Sicilian Defense
+            - paragraph [ref=e183]: 2 games · 8.5 blunders/game
+          - paragraph [ref=e184]: 0W-2L-0D
+        - generic [ref=e185]:
+          - generic [ref=e186]:
+            - paragraph [ref=e187]: Tarrasch Defense 4.cxd5 Exd5
+            - paragraph [ref=e188]: 1 game · 6.0 blunders/game
+          - paragraph [ref=e189]: 0W-1L-0D
+        - generic [ref=e190]:
+          - generic [ref=e191]:
+            - paragraph [ref=e192]: Four Knights Game
+            - paragraph [ref=e193]: 1 game · 2.0 blunders/game
+          - paragraph [ref=e194]: 1W-0L-0D
+        - generic [ref=e195]:
+          - generic [ref=e196]:
+            - paragraph [ref=e197]: Kings Pawn Opening 1...e5
+            - paragraph [ref=e198]: 1 game · 3.0 blunders/game
+          - paragraph [ref=e199]: 0W-1L-0D
+    - generic [ref=e200]:
+      - heading "Game Details" [level=2] [ref=e201]
+      - generic [ref=e202]:
+        - button "vs theiaeva (465) Sicilian Defense · bullet · black · LOSS 1 blunder +" [ref=e204]:
+          - generic [ref=e206]:
+            - generic [ref=e207]:
+              - paragraph [ref=e208]: vs theiaeva
+              - generic [ref=e209]: (465)
+            - paragraph [ref=e210]: Sicilian Defense · bullet · black · LOSS
+          - generic [ref=e211]:
+            - generic [ref=e213]: 1 blunder
+            - text: +
+        - button "vs georgeciotti (426) Tarrasch Defense 4.cxd5 Exd5 · bullet · white · LOSS 6 blunders 4 mistakes +" [ref=e215]:
+          - generic [ref=e217]:
+            - generic [ref=e218]:
+              - paragraph [ref=e219]: vs georgeciotti
+              - generic [ref=e220]: (426)
+            - paragraph [ref=e221]: Tarrasch Defense 4.cxd5 Exd5 · bullet · white · LOSS
+          - generic [ref=e222]:
+            - generic [ref=e223]:
+              - generic [ref=e224]: 6 blunders
+              - generic [ref=e225]: 4 mistakes
+            - text: +
+        - button "vs josemsmg (397) Four Knights Game · bullet · white · WIN 2 blunders 2 mistakes +" [ref=e227]:
+          - generic [ref=e229]:
+            - generic [ref=e230]:
+              - paragraph [ref=e231]: vs josemsmg
+              - generic [ref=e232]: (397)
+            - paragraph [ref=e233]: Four Knights Game · bullet · white · WIN
+          - generic [ref=e234]:
+            - generic [ref=e235]:
+              - generic [ref=e236]: 2 blunders
+              - generic [ref=e237]: 2 mistakes
+            - text: +
+        - button "vs steblueblood (427) Kings Pawn Opening 1...e5 · bullet · white · LOSS 3 blunders 2 mistakes +" [ref=e239]:
+          - generic [ref=e241]:
+            - generic [ref=e242]:
+              - paragraph [ref=e243]: vs steblueblood
+              - generic [ref=e244]: (427)
+            - paragraph [ref=e245]: Kings Pawn Opening 1...e5 · bullet · white · LOSS
+          - generic [ref=e246]:
+            - generic [ref=e247]:
+              - generic [ref=e248]: 3 blunders
+              - generic [ref=e249]: 2 mistakes
+            - text: +
+        - generic [ref=e250]:
+          - button "vs Eygi61 (663) Sicilian Defense · rapid · black · LOSS 16 blunders 7 mistakes −" [active] [ref=e273]:
+            - generic [ref=e253]:
+              - generic [ref=e254]:
+                - paragraph [ref=e255]: vs Eygi61
+                - generic [ref=e256]: (663)
+              - paragraph [ref=e257]: Sicilian Defense · rapid · black · LOSS
+            - generic [ref=e258]:
+              - generic [ref=e259]:
+                - generic [ref=e260]: 16 blunders
+                - generic [ref=e261]: 7 mistakes
+              - text: −
+          - generic [ref=e274]:
+            - application [ref=e278]:
+              - generic [ref=e306]:
+                - generic [ref=e307]:
+                  - generic [ref=e309]: "1"
+                  - generic [ref=e311]: "3"
+                  - generic [ref=e313]: "5"
+                  - generic [ref=e315]: "7"
+                  - generic [ref=e317]: "9"
+                  - generic [ref=e319]: "12"
+                  - generic [ref=e321]: "15"
+                  - generic [ref=e323]: "18"
+                  - generic [ref=e325]: "21"
+                  - generic [ref=e327]: "24"
+                  - generic [ref=e329]: "27"
+                  - generic [ref=e331]: "30"
+                  - generic [ref=e333]: "33"
+                  - generic [ref=e335]: "36"
+                  - generic [ref=e337]: "39"
+                  - generic [ref=e339]: "42"
+                  - generic [ref=e341]: "45"
+                  - generic [ref=e343]: "48"
+                  - generic [ref=e345]: "51"
+                  - generic [ref=e347]: "54"
+                  - generic [ref=e349]: "57"
+                  - generic [ref=e351]: "60"
+                  - generic [ref=e353]: "63"
+                - generic [ref=e354]:
+                  - generic [ref=e356]: "-10"
+                  - generic [ref=e358]: "-5"
+                  - generic [ref=e360]: "0"
+                  - generic [ref=e362]: "+10"
+            - generic [ref=e363]:
+              - generic [ref=e364]:
+                - generic [ref=e365]:
+                  - generic [ref=e366]: Mistake
+                  - generic [ref=e367]: Move 6. Nc6
+                - generic [ref=e368]: "-0.8"
+              - generic [ref=e369]:
+                - generic [ref=e370]:
+                  - generic [ref=e372]:
+                    - generic [ref=e373]: "1"
+                    - button [disabled] [ref=e375]:
+                      - img [ref=e377] [cursor=pointer]
+                  - button [disabled] [ref=e388]:
+                    - img [ref=e390] [cursor=pointer]
+                  - button [disabled] [ref=e399]:
+                    - img [ref=e401] [cursor=pointer]
+                  - button [disabled] [ref=e411]:
+                    - img [ref=e413] [cursor=pointer]
+                  - button [disabled] [ref=e429]:
+                    - img [ref=e431] [cursor=pointer]
+                  - button [disabled] [ref=e440]:
+                    - img [ref=e442] [cursor=pointer]
+                  - generic [ref=e452]: "2"
+                  - button [disabled] [ref=e457]:
+                    - img [ref=e459] [cursor=pointer]
+                  - button [disabled] [ref=e464]:
+                    - img [ref=e466] [cursor=pointer]
+                  - button [disabled] [ref=e477]:
+                    - img [ref=e479] [cursor=pointer]
+                  - button [disabled] [ref=e484]:
+                    - img [ref=e486] [cursor=pointer]
+                  - button [disabled] [ref=e491]:
+                    - img [ref=e493] [cursor=pointer]
+                  - generic [ref=e496]:
+                    - generic [ref=e497]: "3"
+                    - button [disabled] [ref=e499]:
+                      - img [ref=e501] [cursor=pointer]
+                  - button [disabled] [ref=e509]:
+                    - img [ref=e511] [cursor=pointer]
+                  - button [disabled] [ref=e528]:
+                    - img [ref=e530] [cursor=pointer]
+                  - generic [ref=e543]: "4"
+                  - button [disabled] [ref=e554]:
+                    - img [ref=e556] [cursor=pointer]
+                  - generic [ref=e572]: "5"
+                  - button [disabled] [ref=e577]:
+                    - img [ref=e579] [cursor=pointer]
+                  - button [disabled] [ref=e598]:
+                    - img [ref=e600] [cursor=pointer]
+                  - generic [ref=e610]: "6"
+                  - button [disabled] [ref=e615]:
+                    - img [ref=e617] [cursor=pointer]
+                  - button [disabled] [ref=e622]:
+                    - img [ref=e624] [cursor=pointer]
+                  - button [disabled] [ref=e637]:
+                    - img [ref=e639] [cursor=pointer]
+                  - generic [ref=e651]:
+                    - generic [ref=e652]: "7"
+                    - button [disabled] [ref=e654]:
+                      - img [ref=e656] [cursor=pointer]
+                  - button [disabled] [ref=e661]:
+                    - img [ref=e663] [cursor=pointer]
+                  - button [disabled] [ref=e673]:
+                    - img [ref=e675] [cursor=pointer]
+                  - button [disabled] [ref=e680]:
+                    - img [ref=e682] [cursor=pointer]
+                  - button [disabled] [ref=e693]:
+                    - img [ref=e695] [cursor=pointer]
+                  - button [disabled] [ref=e700]:
+                    - img [ref=e702] [cursor=pointer]
+                  - generic [ref=e705]:
+                    - generic:
+                      - generic [ref=e706]: h
+                      - generic [ref=e707]: "8"
+                    - button [disabled] [ref=e709]:
+                      - img [ref=e711] [cursor=pointer]
+                  - generic [ref=e721]: g
+                  - generic [ref=e725]: f
+                  - generic [ref=e728]:
+                    - generic [ref=e729]: e
+                    - button [disabled] [ref=e731]:
+                      - img [ref=e733] [cursor=pointer]
+                  - generic [ref=e740]:
+                    - generic [ref=e741]: d
+                    - button [disabled] [ref=e743]:
+                      - img [ref=e745] [cursor=pointer]
+                  - generic [ref=e762]:
+                    - generic [ref=e763]: c
+                    - button [disabled] [ref=e765]:
+                      - img [ref=e767] [cursor=pointer]
+                  - generic [ref=e775]:
+                    - generic [ref=e776]: b
+                    - button [disabled] [ref=e778]:
+                      - img [ref=e780] [cursor=pointer]
+                  - generic [ref=e788]:
+                    - generic [ref=e789]: a
+                    - button [disabled] [ref=e791]:
+                      - img [ref=e793] [cursor=pointer]
+                  - img
+                - status [ref=e801]
+              - generic [ref=e802]:
+                - generic [ref=e803]:
+                  - button "Prev" [disabled] [ref=e804]
+                  - button "Next" [ref=e805]
+                - button "After Move" [ref=e806]
+                - generic [ref=e807]: 1/24
+              - paragraph [ref=e808]: "Best move: Nxe4 (f6e4)"
+            - paragraph [ref=e809]: This game highlighted critical mistakes in tactical awareness and king safety, leading to significant material loss and ultimately a loss. Key moments involved overlooking better moves that could have maintained balance or improved positions.
+            - button "Practice the first critical mistake from this game" [ref=e810]
+            - generic [ref=e811]:
+              - heading "Key Mistakes" [level=4] [ref=e812]
+              - generic [ref=e813]:
+                - generic [ref=e814]:
+                  - paragraph [ref=e815]: "Move 46: Kg3"
+                  - paragraph [ref=e816]: This move allowed White to deliver checkmate in the next move. Instead, playing f2f3 would have given Black a chance to escape the immediate threat and maintain some defensive resources.
+                  - paragraph [ref=e817]: "Concept: King safety"
+                  - button "Practice this position" [ref=e818]
+                - generic [ref=e819]:
+                  - paragraph [ref=e820]: "Move 27: exd4"
+                  - paragraph [ref=e821]: This move lost a pawn and allowed White to gain a significant advantage. The better move, g5d8, would have promoted the pawn and created a stronger position for Black.
+                  - paragraph [ref=e822]: "Concept: Pawn promotion"
+                  - button "Practice this position" [ref=e823]
+                - generic [ref=e824]:
+                  - paragraph [ref=e825]: "Move 38: f4"
+                  - paragraph [ref=e826]: This move weakened Black's pawn structure and allowed White to take control of the position. The move e5g3 would have maintained material balance and improved Black's position.
+                  - paragraph [ref=e827]: "Concept: Piece activity"
+                  - button "Practice this position" [ref=e828]
+                - generic [ref=e829]:
+                  - paragraph [ref=e830]: "Move 28: Bxd4"
+                  - paragraph [ref=e831]: This move resulted in losing a critical piece and allowed White to seize the initiative. Instead, g5d8 would have created a stronger position for Black.
+                  - paragraph [ref=e832]: "Concept: Piece safety"
+                  - button "Practice this position" [ref=e833]
+                - generic [ref=e834]:
+                  - paragraph [ref=e835]: "Move 14: Nxa5"
+                  - paragraph [ref=e836]: This move lost material and allowed White to gain a significant positional advantage. The move b6d8 would have preserved material and improved Black's chances.
+                  - paragraph [ref=e837]: "Concept: Material balance"
+                  - button "Practice this position" [ref=e838]
+            - generic [ref=e839]:
+              - heading "Great Moves" [level=4] [ref=e840]
+              - generic [ref=e842]:
+                - paragraph [ref=e843]: "Move 63: Kh3"
+                - paragraph [ref=e844]: This move improved Black's position by maintaining the king's safety while preparing to challenge White's pieces. It demonstrated the importance of king activity in the endgame.
+                - paragraph [ref=e845]: "Concept: King activity"
+            - generic [ref=e846]:
+              - heading "How to Improve" [level=4] [ref=e847]
+              - list [ref=e848]:
+                - listitem [ref=e849]:
+                  - generic [ref=e850]: →
+                  - text: Practice tactics puzzles focusing on pawn promotion and piece safety to avoid material losses.
+                - listitem [ref=e851]:
+                  - generic [ref=e852]: →
+                  - text: Review endgame principles, especially king activity and safety, to enhance decision-making in the final phase of the game.
+                - listitem [ref=e853]:
+                  - generic [ref=e854]: →
+                  - text: Analyze games with a focus on identifying blunders and finding better alternatives to improve overall strategic understanding.
+    - button "Analyze More Games" [ref=e263]
+  - generic [ref=e855]: "-10"
