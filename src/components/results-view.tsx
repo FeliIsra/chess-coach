@@ -9,6 +9,8 @@ import PuzzleTrainer, { extractPuzzles, Puzzle } from "./puzzle-trainer";
 import { sanitizeOpeningName } from "@/lib/chess-format";
 import { generateAnnotatedPGN } from "@/lib/pgn-export";
 import { getConceptLink } from "@/lib/chess-education";
+import Tooltip from "./tooltip";
+import { CHESS_GLOSSARY } from "@/lib/chess-glossary";
 
 interface Props {
   result: FullAnalysisResult;
@@ -21,7 +23,7 @@ export default function ResultsView({ result, onReset }: Props) {
   const [activePuzzleIds, setActivePuzzleIds] = useState<string[] | null>(null);
   const [initialPuzzleIndex, setInitialPuzzleIndex] = useState(0);
   const [gameFilter, setGameFilter] = useState<"all" | "win" | "loss" | "draw">("all");
-  const { overallSummary, overallInsight, games, llmInsights, weakSpots } = result;
+  const { overallSummary, overallInsight, games, llmInsights, weakSpots, performance } = result;
 
   const puzzles = useMemo(() => extractPuzzles(games, llmInsights), [games, llmInsights]);
   const primaryUserColor = games[0]?.game.userColor ?? "white";
@@ -339,7 +341,7 @@ export default function ResultsView({ result, onReset }: Props) {
                   : "bg-surface-2 text-muted border border-border hover:text-foreground"
               }`}
             >
-              {filter === "all" ? "All" : `${filter}s`}
+              {filter === "all" ? "All" : filter === "loss" ? "Losses" : `${filter}s`}
             </button>
           ))}
         </div>
@@ -475,7 +477,7 @@ function GameCard({
           {/* Meta info row: depth + Chess.com link */}
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted">
-              Analysis depth: ~{ENGINE_DEPTH} ply
+              Analysis depth: ~10 ply
             </span>
             {game.url && (
               <a

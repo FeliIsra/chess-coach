@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { extractPuzzles } from "@/components/puzzle-trainer";
-import { GameAnalysis, LLMInsight, MoveAnalysis } from "@/lib/types";
+import {
+  extractPuzzles,
+  humanizeEval,
+  getRevealExplanation,
+  Puzzle,
+} from "@/components/puzzle-trainer";
+import { GameAnalysis, LLMInsight, MoveAnalysis, TacticalCategory } from "@/lib/types";
 
 function createMove(overrides: Partial<MoveAnalysis>): MoveAnalysis {
   return {
@@ -120,5 +125,81 @@ describe("extractPuzzles", () => {
     expect(puzzles[1]?.from).toBe("c5");
     expect(puzzles[1]?.to).toBe("b4");
     expect(puzzles[1]?.fenAfter).toContain(" b ");
+  });
+});
+
+function createPuzzle(overrides: Partial<Puzzle> = {}): Puzzle {
+  return {
+    id: "0-10-Bb4",
+    gameIndex: 0,
+    fen: "r1bq1rk1/p2n1ppp/2n1p3/1p1pP3/2pP1P2/2B2NPB/PPPQ2PP/R3K2R w KQ - 0 1",
+    fenAfter: "r1bq1rk1/p2n1ppp/2n1p3/1p1pP3/1BpP1P2/5NPB/PPPQ2PP/R3K2R b KQ - 1 1",
+    bestMove: "c3b4",
+    bestMoveLabel: "Bxb4",
+    san: "Bb4",
+    from: "c3",
+    to: "b4",
+    userColor: "white",
+    moveNumber: 10,
+    classification: "mistake",
+    evalLoss: 60,
+    ...overrides,
+  };
+}
+
+describe("humanizeEval", () => {
+  it.each([
+    [0, "a slight edge"],
+    [29, "a slight edge"],
+    [30, "a small advantage"],
+    [69, "a small advantage"],
+    [70, "a significant advantage"],
+    [149, "a significant advantage"],
+    [150, "roughly a piece worth of advantage"],
+    [299, "roughly a piece worth of advantage"],
+    [300, "a decisive advantage"],
+    [500, "a decisive advantage"],
+  ])("returns correct text for %i centipawns", (cp, expected) => {
+    expect(humanizeEval(cp)).toBe(expected);
+  });
+});
+
+describe("getRevealExplanation", () => {
+  it("returns the puzzle explanation when one is provided", () => {
+    const puzzle = createPuzzle({ explanation: "Custom explanation here." });
+    expect(getRevealExplanation(puzzle)).toBe("Custom explanation here.");
+  });
+
+  it("returns tactics explanation when category is tactics", () => {
+    const puzzle = createPuzzle({ category: "tactics" as TacticalCategory });
+    expect(getRevealExplanation(puzzle)).toContain("forcing tactical idea");
+  });
+
+  it("returns king safety explanation when category is king safety", () => {
+    const puzzle = createPuzzle({ category: "king safety" as TacticalCategory });
+    expect(getRevealExplanation(puzzle)).toContain("pressure on your king");
+  });
+
+  it("returns piece safety explanation when category is piece safety", () => {
+    const puzzle = createPuzzle({ category: "piece safety" as TacticalCategory });
+    expect(getRevealExplanation(puzzle)).toContain("loose pieces defended");
+  });
+
+  it("returns default explanation when no category matches", () => {
+    const puzzle = createPuzzle({ category: "pawn structure" as TacticalCategory });
+    expect(getRevealExplanation(puzzle)).toContain("more control of the position");
+  });
+
+  it("returns default explanation when category is undefined", () => {
+    const puzzle = createPuzzle({ category: undefined, explanation: undefined });
+    expect(getRevealExplanation(puzzle)).toContain("more control of the position");
+  });
+
+  it("prefers explanation over category", () => {
+    const puzzle = createPuzzle({
+      explanation: "Use the explanation field.",
+      category: "tactics" as TacticalCategory,
+    });
+    expect(getRevealExplanation(puzzle)).toBe("Use the explanation field.");
   });
 });

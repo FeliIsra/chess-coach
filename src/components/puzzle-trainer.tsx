@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { LLMInsight, MoveAnalysis, TacticalCategory } from "@/lib/types";
@@ -82,8 +82,24 @@ export function extractPuzzles(
 
 type FeedbackState = "correct" | "wrong" | "revealed" | null;
 
+export function getRevealExplanation(puzzle: Puzzle): string {
+  if (puzzle.explanation) {
+    return puzzle.explanation;
+  }
+  if (puzzle.category === "tactics") {
+    return "The engine line works because it deals with the forcing tactical idea before your opponent can exploit it.";
+  }
+  if (puzzle.category === "king safety") {
+    return "The engine move reduces pressure on your king and removes the most dangerous attacking continuation.";
+  }
+  if (puzzle.category === "piece safety") {
+    return "The engine move keeps your loose pieces defended and avoids letting the position collapse tactically.";
+  }
+  return "The engine move keeps more control of the position and avoids the tactical or structural damage caused by your move.";
+}
+
 /** Map a centipawn eval-loss to a human-friendly description. */
-function humanizeEval(centipawns: number): string {
+export function humanizeEval(centipawns: number): string {
   const pawns = centipawns / 100;
   if (pawns < 0.3) return "a slight edge";
   if (pawns < 0.7) return "a small advantage";
@@ -102,6 +118,7 @@ export default function PuzzleTrainer({
   const [stats, setStats] = useState(createPuzzleSessionStats);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
   const [hintLevel, setHintLevel] = useState(0);
+  const [showAfterPosition, setShowAfterPosition] = useState(false);
 
   const puzzle = puzzles[currentIndex];
   const isFinished = currentIndex >= puzzles.length;
@@ -110,6 +127,7 @@ export default function PuzzleTrainer({
     setFeedback(null);
     setAttemptsForCurrent(0);
     setHintLevel(0);
+    setShowAfterPosition(false);
     setCurrentIndex((i) => i + 1);
   }, []);
 
