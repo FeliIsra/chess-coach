@@ -7,6 +7,8 @@ import EvalChart from "./eval-chart";
 import ChessBoardViewer from "./chess-board-viewer";
 import PuzzleTrainer, { extractPuzzles, Puzzle } from "./puzzle-trainer";
 import { sanitizeOpeningName } from "@/lib/chess-format";
+import Tooltip from "./tooltip";
+import { CHESS_GLOSSARY } from "@/lib/chess-glossary";
 
 interface Props {
   result: FullAnalysisResult;
@@ -337,10 +339,13 @@ function StatCard({
   value: number | string;
   color: string;
 }) {
+  const glossary = CHESS_GLOSSARY[label];
   return (
     <div className="bg-surface-2 rounded-lg px-3 py-2 text-center min-w-[90px]">
       <p className={`text-lg font-bold ${color}`}>{value}</p>
-      <p className="text-xs text-muted">{label}</p>
+      <p className="text-xs text-muted">
+        {glossary ? <Tooltip content={glossary}>{label}</Tooltip> : label}
+      </p>
     </div>
   );
 }
