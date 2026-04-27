@@ -1,0 +1,148 @@
+{
+  "app": {
+    "title": "Chess Coach",
+    "tagline": "AI-powered analysis of your Chess.com games",
+    "footer": "Powered by Stockfish engine analysis and AI coaching"
+  },
+  "localeSwitcher": {
+    "label": "Language",
+    "english": "English",
+    "spanish": "Spanish",
+    "portuguese": "Portuguese"
+  },
+  "home": {
+    "usernameLabel": "Chess.com Username",
+    "usernamePlaceholder": "e.g. hikaru",
+    "gamesToAnalyze": "Games to analyze: {count}",
+    "estimatedDuration": "Usually about {min}-{max}s depending on Chess.com, engine, and AI response time.",
+    "analyzeButton": "Analyze My Games",
+    "fetchingMessage": "Fetching your games from Chess.com...",
+    "errors": {
+      "fetchFailed": "Failed to fetch games",
+      "noGames": "No games found for this user",
+      "analyzeFailed": "Analysis request failed",
+      "noStream": "No response stream",
+      "saveFailed": "Failed to save analysis session",
+      "generic": "Something went wrong"
+    }
+  },
+  "results": {
+    "header": "Your Analysis",
+    "gamesAnalyzed": "{count, plural, one {# game analyzed} other {# games analyzed}}",
+    "exportPgn": "Export PGN",
+    "newAnalysis": "New Analysis",
+    "stats": {
+      "blunders": "Blunders",
+      "mistakes": "Mistakes",
+      "averageAccuracy": "Average Accuracy"
+    },
+    "timePressure": {
+      "label": "{percent}% of your errors happened under time pressure",
+      "warning": "Clock management is a real leak in these games."
+    },
+    "completedIn": "Analysis completed in {duration}",
+    "whatToFixFirst": "What To Fix First",
+    "topProblems": "Top recurring problems",
+    "keepDoingThis": "Keep doing this",
+    "nextTrainingBlock": "Next training block",
+    "startWithPuzzles": "Start With {count, plural, one {# mistake puzzle} other {# mistake puzzles}}",
+    "trainByTheme": "Train By Theme",
+    "themePractice": "Practice identifying {category} patterns - you had {count, plural, one {# error} other {# errors}} in this area across your recent games.",
+    "practiceThisTheme": "Practice this theme",
+    "yourOpenings": "Your Openings",
+    "openingGames": "{count, plural, one {# game} other {# games}}",
+    "blundersPerGame": "{value} blunders/game",
+    "gameDetails": "Game Details",
+    "filters": {
+      "all": "All",
+      "wins": "Wins",
+      "losses": "Losses",
+      "draws": "Draws"
+    },
+    "noFilteredGames": "No {filter} games found.",
+    "analyzeMoreGames": "Analyze More Games",
+    "viewOnChessCom": "View on Chess.com",
+    "analysisDepth": "Analysis depth: ~{ply} ply",
+    "vs": "vs",
+    "blunderCount": "{count, plural, one {# blunder} other {# blunders}}",
+    "mistakeCount": "{count, plural, one {# mistake} other {# mistakes}}",
+    "practiceFirstMistake": "Practice the first critical mistake from this game",
+    "keyMistakes": "Key Mistakes",
+    "greatMoves": "Great Moves",
+    "howToImprove": "How to Improve",
+    "moveLabel": "Move {number}: {move}",
+    "concept": "Concept:",
+    "practiceThisPosition": "Practice this position"
+  },
+  "puzzleTrainer": {
+    "header": "Practice Your Mistakes",
+    "close": "Close",
+    "puzzleCount": "Puzzle {current} of {total}",
+    "solvedCount": "{count} solved",
+    "attemptedAndFirstTry": "{attempted} attempted - {percent}% first try",
+    "youPlayed": "You played {move} ({classification}) on move {number}. Find a better move to avoid losing {evalDescription} (~{evalPawns}).",
+    "themeLabel": "Theme: {category}",
+    "hintHeader": "Hint {level} of 3",
+    "hintConcept": "Think about {concept}...",
+    "hintCategory": "This is a {category} problem.",
+    "hintGeneric": "Look for the move that improves your position the most.",
+    "hintPiece": "The best move involves the piece on {square}.",
+    "hintFromTo": "Try moving from {from} to {to}.",
+    "showAfterMove": "Show After Move",
+    "showBeforeMove": "Show Before Move",
+    "afterMoveDisabled": "Solving is disabled in this view. Switch back to before move to play the puzzle.",
+    "feedbackCorrect": "Correct!",
+    "feedbackCorrectDescription": "That move holds the position together better than {move}.",
+    "feedbackWrongTitle": "Not quite - try again",
+    "feedbackWrongHint": "You can reveal the solution, get a hint, or keep trying.",
+    "feedbackWrongQuick": "Look for the move that reduces the danger immediately.",
+    "targetConcept": "Target concept: {concept}",
+    "solutionTitle": "Solution",
+    "solutionBestMove": "Best move: {move}",
+    "solutionExplanation": "Your move {played} let the evaluation fall quickly. {best} is the practical repair.",
+    "attemptsOnPuzzle": "Attempts on this puzzle: {count}",
+    "getHint": "Get Hint",
+    "showAnswer": "Show Answer",
+    "nextPuzzle": "Next puzzle",
+    "continue": "Continue",
+    "practiceComplete": "Practice Complete",
+    "solvedFirstTry": "{count} solved on the first try",
+    "puzzlesAttempted": "{count} puzzles attempted",
+    "totalAttempts": "{count} total move attempts",
+    "firstTryRate": "{percent}% first-try rate",
+    "backToResults": "Back to Results",
+    "evalDescriptions": {
+      "slightEdge": "a slight edge",
+      "smallAdvantage": "a small advantage",
+      "significantAdvantage": "a significant advantage",
+      "pieceAdvantage": "roughly a piece worth of advantage",
+      "decisiveAdvantage": "a decisive advantage"
+    },
+    "revealExplanation": {
+      "tactics": "The engine line works because it deals with the forcing tactical idea before your opponent can exploit it.",
+      "kingSafety": "The engine move reduces pressure on your king and removes the most dangerous attacking continuation.",
+      "pieceSafety": "The engine move keeps your loose pieces defended and avoids letting the position collapse tactically.",
+      "default": "The engine move keeps more control of the position and avoids the tactical or structural damage caused by your move."
+    }
+  },
+  "progressSummary": {
+    "title": "Your Progress",
+    "empty": "empty",
+    "emptyDescription": "Finish a few analyses and this area will start showing trend lines.",
+    "trendImproving": "Improving",
+    "trendDeclining": "Declining",
+    "trendStable": "Stable",
+    "sessions": "Sessions",
+    "games": "Games",
+    "averageBlundersPerGame": "Average Blunders/Game",
+    "sparklineLabel": "Average blunders per game over the last {count, plural, one {# session} other {# sessions}}"
+  },
+  "trends": {
+    "improving": "Improving",
+    "declining": "Declining",
+    "stable": "Stable"
+  },
+  "common": {
+    "loading": "Loading..."
+  }
+}
