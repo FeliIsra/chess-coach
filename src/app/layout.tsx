@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import ReportButton from "@/components/report-button";
 
 export const metadata: Metadata = {
   title: "Chess Coach | Game Review",
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/30 selection:text-foreground">
         {children}
+        <ReportButton />
       </body>
     </html>
   );
