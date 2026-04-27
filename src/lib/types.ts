@@ -42,6 +42,27 @@ export interface PositionEval {
   depth: number;
 }
 
+export type GamePhase = "opening" | "middlegame" | "endgame";
+
+export interface PhaseMetrics {
+  moves: number;
+  errors: number;
+  blunders: number;
+  mistakes: number;
+  inaccuracies: number;
+}
+
+export interface PhaseBreakdown {
+  opening: PhaseMetrics;
+  middlegame: PhaseMetrics;
+  endgame: PhaseMetrics;
+}
+
+export interface GameTimeControl {
+  initialSeconds: number;
+  incrementSeconds: number;
+}
+
 export interface MoveAnalysis {
   moveNumber: number;
   san: string; // e.g. "Bxf7"
@@ -56,6 +77,7 @@ export interface MoveAnalysis {
   to: string; // square the piece moved to (e.g. "e4")
   fenAfter: string; // position after the move
   clockSeconds?: number; // remaining time in seconds when move was made
+  phase?: GamePhase;
 }
 
 export interface GameAnalysis {
@@ -67,6 +89,9 @@ export interface GameAnalysis {
   mistakes: number;
   inaccuracies: number;
   averageEvalLoss: number;
+  engineDepth?: number;
+  phaseBreakdown?: PhaseBreakdown;
+  timeControl?: GameTimeControl;
 }
 
 export type TacticalCategory =
@@ -127,6 +152,8 @@ export interface FullAnalysisResult {
     totalMistakes: number;
     averageAccuracy: number;
     timePressureBlunderPercent?: number;
+    phaseBreakdown?: PhaseBreakdown;
+    averageEngineDepth?: number;
   };
   overallInsight: {
     summary: string;

@@ -22,7 +22,7 @@ export default function ChessBoardViewer({ moves, userColor }: ChessBoardViewerP
 
   if (keyMoves.length === 0) {
     return (
-      <div className="bg-surface-2 rounded-lg p-4 text-center text-muted text-sm">
+      <div className="rounded-2xl border border-border bg-surface-2 px-4 py-5 text-center text-sm text-muted">
         No key moves to display
       </div>
     );
@@ -68,15 +68,14 @@ export default function ChessBoardViewer({ moves, userColor }: ChessBoardViewerP
 
   return (
     <div className="space-y-3">
-      {/* Classification badge + eval */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
           <span
-            className={`${classColor[move.classification]} text-white text-xs font-bold px-2 py-0.5 rounded`}
+            className={`${classColor[move.classification]} inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold text-white`}
           >
             {classLabel[move.classification]}
           </span>
-          <span className="text-sm text-foreground font-mono">
+          <span className="truncate text-sm font-medium text-foreground">
             Move {move.moveNumber}. {move.san}
           </span>
         </div>
@@ -90,14 +89,13 @@ export default function ChessBoardViewer({ moves, userColor }: ChessBoardViewerP
         </span>
       </div>
 
-      {/* Board */}
-      <div className="rounded-lg overflow-hidden">
+      <div className="board-frame overflow-hidden rounded-2xl border border-border">
         <Chessboard
           options={{
             position: fen,
             boardOrientation: userColor,
-            darkSquareStyle: { backgroundColor: "#4a3728" },
-            lightSquareStyle: { backgroundColor: "#d4a96a" },
+            darkSquareStyle: { backgroundColor: "var(--board-dark)" },
+            lightSquareStyle: { backgroundColor: "var(--board-light)" },
             squareStyles,
             arrows,
             allowDragging: false,
@@ -107,7 +105,7 @@ export default function ChessBoardViewer({ moves, userColor }: ChessBoardViewerP
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex gap-1.5">
           <button
             onClick={() => {
@@ -115,7 +113,7 @@ export default function ChessBoardViewer({ moves, userColor }: ChessBoardViewerP
               setShowAfter(false);
             }}
             disabled={currentIdx === 0}
-            className="px-3 py-1.5 text-xs bg-surface-2 hover:bg-surface-3 disabled:opacity-30 text-foreground rounded-md transition-colors border border-border"
+            className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-surface-3 disabled:opacity-30"
           >
             Prev
           </button>
@@ -125,16 +123,15 @@ export default function ChessBoardViewer({ moves, userColor }: ChessBoardViewerP
               setShowAfter(false);
             }}
             disabled={currentIdx === keyMoves.length - 1}
-            className="px-3 py-1.5 text-xs bg-surface-2 hover:bg-surface-3 disabled:opacity-30 text-foreground rounded-md transition-colors border border-border"
+            className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-surface-3 disabled:opacity-30"
           >
             Next
           </button>
         </div>
 
-        {/* Before/After toggle */}
         <button
           onClick={() => setShowAfter(!showAfter)}
-          className="px-3 py-1.5 text-xs bg-surface-2 hover:bg-surface-3 text-foreground rounded-md transition-colors border border-border"
+          className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-surface-3"
         >
           {showAfter ? "Before Move" : "After Move"}
         </button>

@@ -5,6 +5,11 @@ import {
   getRevealExplanation,
   Puzzle,
 } from "@/components/puzzle-trainer";
+import {
+  describeEvalLoss,
+  formatEvalLossPawns,
+  playPuzzleCue,
+} from "@/lib/puzzle-feedback";
 import { GameAnalysis, LLMInsight, MoveAnalysis, TacticalCategory } from "@/lib/types";
 
 function createMove(overrides: Partial<MoveAnalysis>): MoveAnalysis {
@@ -161,6 +166,18 @@ describe("humanizeEval", () => {
     [500, "a decisive advantage"],
   ])("returns correct text for %i centipawns", (cp, expected) => {
     expect(humanizeEval(cp)).toBe(expected);
+  });
+});
+
+describe("puzzle feedback helpers", () => {
+  it("keeps the shared eval-loss wording aligned with the trainer copy", () => {
+    expect(describeEvalLoss(60)).toBe("a small advantage");
+    expect(formatEvalLossPawns(60)).toBe("0.6 pawns");
+    expect(describeEvalLoss(180)).toBe("roughly a piece worth of advantage");
+  });
+
+  it("falls back cleanly when audio support is unavailable", () => {
+    expect(() => playPuzzleCue("wrong")).not.toThrow();
   });
 });
 

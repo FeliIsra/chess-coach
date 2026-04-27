@@ -4,7 +4,7 @@ import { createElement } from "react";
 import Tooltip from "@/components/tooltip";
 
 function renderTooltip(content = "Tooltip text", children = "Hover me") {
-  return render(createElement(Tooltip, { content, children }));
+  return render(createElement(Tooltip, { content }, children));
 }
 
 describe("Tooltip", () => {

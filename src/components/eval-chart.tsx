@@ -2,8 +2,9 @@
 
 import { useContainerReady } from "@/components/use-container-ready";
 import {
-  AreaChart,
   Area,
+  ComposedChart,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -14,9 +15,20 @@ import { MoveAnalysis } from "@/lib/types";
 
 interface EvalChartProps {
   moves: MoveAnalysis[];
+  timeControlSeconds?: number;
 }
 
-export default function EvalChart({ moves }: EvalChartProps) {
+function formatPhase(phase?: MoveAnalysis["phase"], moveNumber?: number): string {
+  if (phase) {
+    return phase.charAt(0).toUpperCase() + phase.slice(1);
+  }
+  if (moveNumber === undefined) return "Unknown";
+  if (moveNumber <= 10) return "Opening";
+  if (moveNumber <= 25) return "Middlegame";
+  return "Endgame";
+}
+
+export default function EvalChart({ moves, timeControlSeconds }: EvalChartProps) {
   const { ref, isReady, width, height } = useContainerReady<HTMLDivElement>();
   if (moves.length === 0) return null;
 
@@ -24,7 +36,13 @@ export default function EvalChart({ moves }: EvalChartProps) {
     move: m.moveNumber,
     eval: Math.max(-10, Math.min(10, m.evalAfter / 100)), // clamp ±10 pawns
     classification: m.classification,
+    phase: m.phase,
+    clockPercent:
+      timeControlSeconds && m.clockSeconds !== undefined
+        ? Math.max(0, Math.min(100, (m.clockSeconds / timeControlSeconds) * 100))
+        : null,
   }));
+  const hasClockData = data.some((entry) => entry.clockPercent !== null);
 
   return (
     <div ref={ref} className="w-full min-w-0 h-[120px]">
@@ -33,7 +51,7 @@ export default function EvalChart({ moves }: EvalChartProps) {
           width={Math.max(width, 280)}
           height={Math.max(height, 120)}
         >
-          <AreaChart data={data} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+          <ComposedChart data={data} margin={{ top: 5, right: hasClockData ? 30 : 5, bottom: 0, left: -20 }}>
             <defs>
               <linearGradient id="evalGreen" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#4ade80" stopOpacity={0.3} />
@@ -52,11 +70,23 @@ export default function EvalChart({ moves }: EvalChartProps) {
             />
             <YAxis
               domain={[-10, 10]}
+              yAxisId="left"
               tick={{ fontSize: 10, fill: "#888880" }}
               axisLine={{ stroke: "#444" }}
               tickLine={false}
               tickFormatter={(v: number) => (v > 0 ? `+${v}` : `${v}`)}
             />
+            {hasClockData && (
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                domain={[0, 100]}
+                tick={{ fontSize: 10, fill: "#888880" }}
+                axisLine={{ stroke: "#444" }}
+                tickLine={false}
+                tickFormatter={(v: number) => `${v}%`}
+              />
+            )}
             <Tooltip
               contentStyle={{
                 backgroundColor: "#2e2e2e",
@@ -65,15 +95,31 @@ export default function EvalChart({ moves }: EvalChartProps) {
                 color: "#e8e0d0",
                 fontSize: 12,
               }}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formatter={(value: any) => [`${(value ?? 0) > 0 ? "+" : ""}${Number(value ?? 0).toFixed(1)}`, "Eval"]}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              labelFormatter={(label: any) => `Move ${label}`}
+              formatter={(value, name) => {
+                const numericValue = Number(value ?? 0);
+                if (name === "Clock remaining") {
+                  return [`${numericValue.toFixed(0)}%`, name];
+                }
+                return [
+                  `${numericValue > 0 ? "+" : ""}${numericValue.toFixed(1)}`,
+                  name,
+                ];
+              }}
+              labelFormatter={(label, payload) => {
+                const move = Number(label);
+                const phase = formatPhase(
+                  payload?.[0]?.payload?.phase,
+                  Number.isFinite(move) ? move : undefined
+                );
+                return `Move ${label} · ${phase}`;
+              }}
             />
-            <ReferenceLine y={0} stroke="#444" strokeDasharray="3 3" />
+            <ReferenceLine y={0} yAxisId="left" stroke="#444" strokeDasharray="3 3" />
             <Area
+              yAxisId="left"
               type="monotone"
               dataKey="eval"
+              name="Eval"
               stroke="#4ade80"
               fill="url(#evalGreen)"
               strokeWidth={1.5}
@@ -92,7 +138,18 @@ export default function EvalChart({ moves }: EvalChartProps) {
                 return <circle cx={cx} cy={cy} r={0} key={`dot-${cx}`} />;
               }}
             />
-          </AreaChart>
+            {hasClockData && (
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="clockPercent"
+                name="Clock remaining"
+                stroke="#60a5fa"
+                strokeWidth={1.5}
+                dot={false}
+              />
+            )}
+          </ComposedChart>
         </ResponsiveContainer>
       ) : (
         <div className="h-full w-full rounded-lg bg-surface-2/70" />

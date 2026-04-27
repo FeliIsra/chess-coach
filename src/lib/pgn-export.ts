@@ -1,5 +1,10 @@
 import { GameAnalysis, LLMInsight } from "./types";
 
+interface AnnotationEntry {
+  move: string;
+  text: string;
+}
+
 /**
  * Extract PGN headers from a raw PGN string.
  * Returns header block lines and the move text portion.
@@ -76,20 +81,52 @@ function tokenizeMoveText(moveText: string): string[] {
 /**
  * Build annotation map from LLM insights keyed by move number.
  */
-function buildAnnotationMap(insight: LLMInsight | undefined): Map<number, string[]> {
-  const annotations = new Map<number, string[]>();
+function normalizeSanToken(token: string): string {
+  return token.trim().replace(/[!?+#]+$/g, "");
+}
+
+function sanitizeCommentText(text: string): string {
+  return text.replace(/[{}]/g, "").replace(/\s+/g, " ").trim();
+}
+
+function buildAnnotationMap(insight: LLMInsight | undefined): Map<number, AnnotationEntry[]> {
+  const annotations = new Map<number, AnnotationEntry[]>();
   if (!insight) return annotations;
 
+  const appendAnnotation = (moveNumber: number, move: string, text: string) => {
+    if (!moveNumber || !move.trim()) return;
+
+    const existing = annotations.get(moveNumber) ?? [];
+    const normalizedMove = normalizeSanToken(move);
+    const normalizedText = sanitizeCommentText(text);
+
+    if (!normalizedMove || !normalizedText) return;
+
+    if (
+      !existing.some(
+        (entry) => entry.move === normalizedMove && entry.text === normalizedText,
+      )
+    ) {
+      existing.push({
+        move: normalizedMove,
+        text: normalizedText,
+      });
+      annotations.set(moveNumber, existing);
+    }
+  };
+
   for (const m of insight.worstMovesAnalysis ?? []) {
-    const existing = annotations.get(m.moveNumber) ?? [];
-    existing.push(`{Mistake: ${m.explanation}. Best was ${m.move}}`);
-    annotations.set(m.moveNumber, existing);
+    const explanation = sanitizeCommentText(m.explanation) || "No explanation provided";
+    const bestMove = sanitizeCommentText(m.move);
+    const body = bestMove
+      ? `Mistake: ${explanation}. Best was ${bestMove}`
+      : `Mistake: ${explanation}`;
+    appendAnnotation(m.moveNumber, m.move, body);
   }
 
   for (const m of insight.bestMovesAnalysis ?? []) {
-    const existing = annotations.get(m.moveNumber) ?? [];
-    existing.push(`{Great move: ${m.explanation}}`);
-    annotations.set(m.moveNumber, existing);
+    const explanation = sanitizeCommentText(m.explanation) || "No explanation provided";
+    appendAnnotation(m.moveNumber, m.move, `Great move: ${explanation}`);
   }
 
   return annotations;
@@ -99,7 +136,10 @@ function buildAnnotationMap(insight: LLMInsight | undefined): Map<number, string
  * Insert annotations into PGN move text tokens.
  * Annotations are inserted after the move that corresponds to the move number.
  */
-function insertAnnotations(tokens: string[], annotations: Map<number, string[]>): string[] {
+function insertAnnotations(
+  tokens: string[],
+  annotations: Map<number, AnnotationEntry[]>,
+): string[] {
   if (annotations.size === 0) return tokens;
 
   const result: string[] = [];
@@ -119,13 +159,20 @@ function insertAnnotations(tokens: string[], annotations: Map<number, string[]>)
       !token.match(/^\d+\./) && // not a move number
       !token.startsWith("{") && // not a comment
       !["1-0", "0-1", "1/2-1/2", "*"].includes(token) && // not a result
-      token.match(/^[a-hKQRBNO]/) !== null; // looks like a chess move
+      token.match(/^[a-hKQRBNO]/i) !== null; // looks like a chess move
 
     if (isMove && annotations.has(currentMoveNumber)) {
-      const comments = annotations.get(currentMoveNumber)!;
-      result.push(...comments);
-      // Remove so we don't insert twice (for move numbers with both white and black moves)
-      annotations.delete(currentMoveNumber);
+      const normalizedToken = normalizeSanToken(token);
+      const comments = annotations.get(currentMoveNumber) ?? [];
+      const matchingComments = comments.filter((entry) => entry.move === normalizedToken);
+
+      if (matchingComments.length > 0) {
+        result.push(...matchingComments.map((entry) => `{${entry.text}}`));
+        annotations.set(
+          currentMoveNumber,
+          comments.filter((entry) => entry.move !== normalizedToken),
+        );
+      }
     }
   }
 
@@ -146,7 +193,7 @@ export function generateAnnotatedPGN(
     const insight = llmInsights[i];
     const rawPgn = game.game.pgn;
 
-    if (!rawPgn) continue;
+    if (!rawPgn?.trim()) continue;
 
     const { headers, moveText } = splitPGN(rawPgn);
     const tokens = tokenizeMoveText(moveText);

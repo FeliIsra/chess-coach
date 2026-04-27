@@ -1,5 +1,14 @@
 import { Chess } from "chess.js";
-import { ChessGame, GameAnalysis, MoveAnalysis, PositionEval } from "./types";
+import {
+  ChessGame,
+  GameAnalysis,
+  GamePhase,
+  MoveAnalysis,
+  PhaseBreakdown,
+  PhaseMetrics,
+  PositionEval,
+  GameTimeControl,
+} from "./types";
 import { evaluatePositionWithLocalStockfish } from "./local-stockfish";
 
 const CHESS_API_URL = "https://chess-api.com/v1";
@@ -109,6 +118,58 @@ function toPlayedUci(move: {
   promotion?: string;
 }): string {
   return normalizeUci(move.from + move.to + (move.promotion ?? ""));
+}
+
+function classifyGamePhase(moveNumber: number): GamePhase {
+  if (moveNumber <= 10) return "opening";
+  if (moveNumber <= 25) return "middlegame";
+  return "endgame";
+}
+
+function createPhaseMetrics(): PhaseMetrics {
+  return {
+    moves: 0,
+    errors: 0,
+    blunders: 0,
+    mistakes: 0,
+    inaccuracies: 0,
+  };
+}
+
+function createPhaseBreakdown(): PhaseBreakdown {
+  return {
+    opening: createPhaseMetrics(),
+    middlegame: createPhaseMetrics(),
+    endgame: createPhaseMetrics(),
+  };
+}
+
+function recordPhaseMove(
+  breakdown: PhaseBreakdown,
+  phase: GamePhase,
+  classification: MoveAnalysis["classification"]
+): void {
+  const stats = breakdown[phase];
+  stats.moves += 1;
+  if (classification === "inaccuracy") {
+    stats.errors += 1;
+    stats.inaccuracies += 1;
+  } else if (classification === "mistake") {
+    stats.errors += 1;
+    stats.mistakes += 1;
+  } else if (classification === "blunder") {
+    stats.errors += 1;
+    stats.blunders += 1;
+  }
+}
+
+function parseTimeControl(pgn: string): GameTimeControl | undefined {
+  const match = pgn.match(/\[TimeControl "(\d+)(?:\+(\d+))?"\]/);
+  if (!match) return undefined;
+  return {
+    initialSeconds: Number.parseInt(match[1], 10),
+    incrementSeconds: Number.parseInt(match[2] ?? "0", 10),
+  };
 }
 
 async function evaluatePosition(fen: string, depth: number): Promise<PositionEval> {
@@ -234,6 +295,7 @@ export async function analyzeGame(
 
   const history = chess.history({ verbose: true });
   const clockTimes = parseClockTimes(game.pgn);
+  const timeControl = parseTimeControl(game.pgn);
   const userMoves: { move: (typeof history)[0]; index: number }[] = [];
 
   for (let i = 0; i < history.length; i++) {
@@ -249,16 +311,20 @@ export async function analyzeGame(
   const moveAnalyses: MoveAnalysis[] = [];
   let lastKnownEval = 0; // centipawns from white's perspective
   const analysisDepth = getDepthForTimeClass(game.timeClass);
+  const phaseBreakdown = createPhaseBreakdown();
+  let observedEngineDepth: number | undefined;
 
   for (let i = 0; i < userMoves.length; i++) {
     const { move, index } = userMoves[i];
     onProgress?.(i + 1, userMoves.length);
 
     const clockSecs = clockTimes.get(index);
+    const phase = classifyGamePhase(Math.floor(index / 2) + 1);
 
     // Skip book moves: first 5 full moves (index < 10 in history)
     if (index < 10) {
       const userEval = userPerspective(lastKnownEval, game.userColor);
+      recordPhaseMove(phaseBreakdown, phase, "good");
       moveAnalyses.push({
         moveNumber: Math.floor(index / 2) + 1,
         san: move.san,
@@ -273,6 +339,7 @@ export async function analyzeGame(
         to: move.to,
         fenAfter: move.after,
         clockSeconds: clockSecs,
+        phase,
       });
       continue;
     }
@@ -280,6 +347,7 @@ export async function analyzeGame(
     // Skip forced recaptures when position is balanced
     if (isRecapture(history, index) && Math.abs(lastKnownEval) < 100) {
       const userEval = userPerspective(lastKnownEval, game.userColor);
+      recordPhaseMove(phaseBreakdown, phase, "good");
       moveAnalyses.push({
         moveNumber: Math.floor(index / 2) + 1,
         san: move.san,
@@ -294,12 +362,14 @@ export async function analyzeGame(
         to: move.to,
         fenAfter: move.after,
         clockSeconds: clockSecs,
+        phase,
       });
       continue;
     }
 
     try {
       const evalBefore = await evaluatePosition(move.before, analysisDepth);
+      observedEngineDepth = evalBefore.depth;
       const playedUci = toPlayedUci(move);
       const bestUci = normalizeUci(evalBefore.bestMove);
       const shouldEvaluateAfter =
@@ -307,12 +377,16 @@ export async function analyzeGame(
       const evalAfter = shouldEvaluateAfter
         ? await evaluatePosition(move.after, analysisDepth)
         : evalBefore;
+      observedEngineDepth = evalAfter.depth ?? observedEngineDepth;
 
       lastKnownEval = evalAfter.eval;
 
       const userEvalBefore = userPerspective(evalBefore.eval, game.userColor);
       const userEvalAfter = userPerspective(evalAfter.eval, game.userColor);
       const evalDiff = userEvalAfter - userEvalBefore;
+      const classification = classifyMove(evalDiff);
+
+      recordPhaseMove(phaseBreakdown, phase, classification);
 
       moveAnalyses.push({
         moveNumber: Math.floor(index / 2) + 1,
@@ -322,12 +396,13 @@ export async function analyzeGame(
         evalAfter: userEvalAfter,
         evalDiff,
         bestMove: evalBefore.bestMove,
-        classification: classifyMove(evalDiff),
+        classification,
         fen: move.before,
         from: move.from,
         to: move.to,
         fenAfter: move.after,
         clockSeconds: clockSecs,
+        phase,
       });
     } catch {
       continue;
@@ -353,5 +428,8 @@ export async function analyzeGame(
             0
           ) / moveAnalyses.length
         : 0,
+    engineDepth: observedEngineDepth ?? analysisDepth,
+    phaseBreakdown,
+    timeControl,
   };
 }

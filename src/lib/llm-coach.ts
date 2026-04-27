@@ -453,7 +453,8 @@ function sanitizeWeakSpotTips(
     category,
     tip:
       byCategory.get(category) ??
-      "Review two recent mistakes in this theme and solve 5 focused puzzles.",
+      DEFAULT_WEAK_SPOT_TIPS[category] ??
+      "Review two recent examples of this theme and solve 5 focused puzzles.",
   }));
 }
 
@@ -498,21 +499,21 @@ function sanitizeOverallInsight(
 
 const DEFAULT_WEAK_SPOT_TIPS: Record<string, string> = {
   tactics:
-    "Do 10 short tactical puzzles and verbalize the forcing line before moving.",
+    "Solve 5 short tactical puzzles and name every check, capture, and threat before moving.",
   "piece safety":
-    "Before each move, scan for loose pieces and undefended squares on both sides.",
+    "Before each move, check which pieces are loose or attacked with no backup.",
   "king safety":
-    "Delay side attacks until your king is safe and your opponent's forcing checks are covered.",
+    "Finish king safety first, then ask what forcing checks your opponent has.",
   "pawn structure":
-    "Review the pawn breaks from these games and note which weaknesses they created.",
+    "Review the pawn moves that created weaknesses and note which squares became targets.",
   endgame:
-    "Replay the late phase slowly and practice converting or holding similar endgames.",
+    "Replay the late phase slowly and practice the one key plan you missed.",
   opening:
-    "Narrow your opening choices and memorize the first safe setup instead of chasing sidelines.",
+    "Keep one simple setup and learn the first few safe developing moves.",
   positional:
-    "Pause on quiet moves and ask which piece improves most without creating new targets.",
+    "On quiet moves, ask which piece can improve without creating a new weakness.",
   "time management":
-    "Bank a little time in simple positions so critical tactical moments are not rushed.",
+    "Save time in simple positions so you can slow down in sharp ones.",
 };
 
 function dedupeNormalized(items: string[], maxItems: number): string[] {
@@ -557,7 +558,13 @@ function buildFastOverallInsight(
 
   const studyPlan = dedupeNormalized(
     [
-      ...weakSpots.slice(0, 3).map((spot) => DEFAULT_WEAK_SPOT_TIPS[spot.category] ?? "Review recent examples of this theme and solve 5 focused puzzles."),
+      ...weakSpots.slice(0, 3).map(
+        (spot) =>
+          `Focus one short practice block on ${spot.category}: ${
+            DEFAULT_WEAK_SPOT_TIPS[spot.category] ??
+            "Review recent examples of this theme and solve 5 focused puzzles."
+          }`
+      ),
       "Review your top three blunders and write the engine move before replaying the line.",
       "Play the next training game slightly slower and force a threat scan before every critical move.",
     ],

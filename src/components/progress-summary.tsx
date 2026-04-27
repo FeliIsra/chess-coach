@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { AnalysisSession } from "@/lib/types";
-import { loadHistory, getTrend } from "@/lib/history";
+import {
+  formatSessionDate,
+  getHistorySummary,
+  loadHistory,
+} from "@/lib/history";
 
 export default function ProgressSummary() {
   const [sessions, setSessions] = useState<AnalysisSession[]>([]);
@@ -32,17 +36,19 @@ export default function ProgressSummary() {
 
   if (!hasLoaded) return null;
 
-  if (sessions.length === 0) {
+  const summary = getHistorySummary(sessions);
+
+  if (summary.totalSessions === 0) {
     return (
-      <div className="w-full max-w-md bg-surface-1 rounded-2xl border border-border p-4 mb-4">
-        <div className="flex items-center justify-between gap-3">
+      <div className="surface-frame w-full rounded-[24px] p-4">
+        <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-sm font-semibold text-foreground">Your Progress</h3>
-            <p className="text-xs text-muted mt-1">
-              Finish a few analyses and this area will start showing trend lines.
+            <p className="mt-1 text-xs leading-5 text-muted">
+              Finish a few analyses and this area will show your recent sessions and trends.
             </p>
           </div>
-          <span className="text-xs uppercase tracking-[0.18em] text-muted">
+          <span className="rounded-full border border-border bg-surface-2 px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] text-muted">
             empty
           </span>
         </div>
@@ -50,54 +56,45 @@ export default function ProgressSummary() {
     );
   }
 
-  const trend = getTrend(sessions);
-  const recent = sessions.slice(-10);
-  const maxBlunders = Math.max(...recent.map((s) => s.avgBlundersPerGame), 1);
-
   const trendLabel =
-    trend === "improving"
+    summary.trend === "improving"
       ? "Improving"
-      : trend === "declining"
+      : summary.trend === "declining"
       ? "Declining"
       : "Stable";
   const trendColor =
-    trend === "improving"
+    summary.trend === "improving"
       ? "text-accent-green"
-      : trend === "declining"
+      : summary.trend === "declining"
       ? "text-accent-red"
       : "text-accent-amber";
   const trendArrow =
-    trend === "improving" ? "\u2193" : trend === "declining" ? "\u2191" : "\u2194";
+    summary.trend === "improving" ? "\u2193" : summary.trend === "declining" ? "\u2191" : "\u2194";
+  const recent = summary.recentSessions;
+  const maxBlunders = Math.max(...recent.map((s) => s.avgBlundersPerGame), 1);
+  const latestSession = summary.latestSession;
 
   return (
-    <div className="w-full max-w-md bg-surface-1 rounded-2xl border border-border p-4 mb-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-foreground">Your Progress</h3>
-        <span className={`text-xs font-medium ${trendColor}`}>
+    <div className="surface-frame w-full rounded-[24px] p-4">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">Your Progress</h3>
+          <p className="mt-1 text-xs leading-5 text-muted">
+            {latestSession
+              ? `Latest: ${latestSession.username} · ${formatSessionDate(latestSession.date)}`
+              : "Track your recent sessions and keep the training loop visible."}
+          </p>
+        </div>
+        <span className={`rounded-full border border-border bg-surface-2 px-2.5 py-1 text-xs font-semibold ${trendColor}`}>
           {trendArrow} {trendLabel}
         </span>
       </div>
 
-      <div className="flex items-center gap-4 mb-3">
-        <div className="text-center">
-          <p className="text-lg font-bold text-foreground">{sessions.length}</p>
-          <p className="text-xs text-muted">Sessions</p>
-        </div>
-        <div className="text-center">
-          <p className="text-lg font-bold text-foreground">
-            {sessions.reduce((s, a) => s + a.gamesCount, 0)}
-          </p>
-          <p className="text-xs text-muted">Games</p>
-        </div>
-        <div className="text-center">
-          <p className="text-lg font-bold text-accent-red">
-            {(
-              sessions.reduce((s, a) => s + a.avgBlundersPerGame, 0) /
-              sessions.length
-            ).toFixed(1)}
-          </p>
-          <p className="text-xs text-muted">Average Blunders/Game</p>
-        </div>
+      <div className="mb-4 grid grid-cols-2 gap-2">
+        <Stat label="Sessions" value={summary.totalSessions.toString()} />
+        <Stat label="Games" value={summary.totalGames.toString()} />
+        <Stat label="Blunders/Game" value={summary.averageBlundersPerGame.toFixed(1)} accent="text-accent-red" />
+        <Stat label="Accuracy" value={`${summary.averageAccuracy.toFixed(0)}%`} accent="text-accent-blue" />
       </div>
 
       {/* Mini sparkline */}
@@ -119,9 +116,57 @@ export default function ProgressSummary() {
           })}
         </div>
       )}
-      <p className="text-xs text-muted mt-1">
+      <p className="mt-1 text-xs leading-5 text-muted">
         Average blunders per game over the last {recent.length} session{recent.length === 1 ? "" : "s"}
       </p>
+
+      {recent.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Recent sessions</p>
+          <div className="space-y-2">
+            {recent
+              .slice()
+              .reverse()
+              .map((session) => (
+                <div
+                  key={`${session.date}-${session.username}`}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface-2 px-3 py-2.5"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">{session.username}</p>
+                    <p className="text-xs text-muted">
+                      {formatSessionDate(session.date)} · {session.gamesCount} game
+                      {session.gamesCount === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-semibold text-foreground">
+                      {session.avgBlundersPerGame.toFixed(1)}
+                    </p>
+                    <p className="text-xs text-muted">blunders/game</p>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  accent = "text-foreground",
+}: {
+  label: string;
+  value: string;
+  accent?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-surface-2 px-3 py-2">
+      <p className={`text-base font-bold ${accent}`}>{value}</p>
+      <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-muted">{label}</p>
     </div>
   );
 }

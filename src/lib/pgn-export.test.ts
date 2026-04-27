@@ -102,7 +102,7 @@ describe("generateAnnotatedPGN", () => {
     const insight = makeInsight({
       worstMovesAnalysis: [
         {
-          move: "Bb5",
+          move: "O-O",
           moveNumber: 5,
           explanation: "Castling too early allows a6 push",
           concept: "King safety",
@@ -113,7 +113,7 @@ describe("generateAnnotatedPGN", () => {
     const result = generateAnnotatedPGN([analysis], [insight]);
 
     // The annotation should appear after move 5's first move (O-O)
-    expect(result).toContain("{Mistake: Castling too early allows a6 push. Best was Bb5}");
+    expect(result).toContain("{Mistake: Castling too early allows a6 push. Best was O-O}");
 
     // Verify the annotation is placed after a move at move 5, not before
     const moveIndex = result.indexOf("5.");
@@ -192,5 +192,51 @@ describe("generateAnnotatedPGN", () => {
     // Should NOT contain any annotation braces (other than any that might be in the raw PGN)
     expect(result).not.toContain("{Mistake:");
     expect(result).not.toContain("{Great move:");
+  });
+
+  it("keeps annotations attached to the matching SAN and deduplicates repeated notes", () => {
+    const analysis = makeGameAnalysis({
+      game: makeGame({
+        pgn: `[Event "Test"]
+[White "Player1"]
+[Black "Player2"]
+[Result "1-0"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 1-0`,
+      }),
+    });
+    const insight = makeInsight({
+      worstMovesAnalysis: [
+        {
+          move: "Bb5",
+          moveNumber: 3,
+          explanation: "Stop repeating the same idea {and keep pressure}",
+          concept: "King safety",
+        },
+        {
+          move: "Bb5",
+          moveNumber: 3,
+          explanation: "Stop repeating the same idea {and keep pressure}",
+          concept: "King safety",
+        },
+        {
+          move: "a6",
+          moveNumber: 3,
+          explanation: "Castle before grabbing space",
+          concept: "Development",
+        },
+      ],
+    });
+
+    const result = generateAnnotatedPGN([analysis], [insight]);
+
+    expect(result.match(/\{Mistake: Stop repeating the same idea and keep pressure\. Best was Bb5\}/g)?.length).toBe(1);
+    expect(result).toContain("{Mistake: Castle before grabbing space. Best was a6}");
+    expect(result.indexOf("Bb5")).toBeLessThan(
+      result.indexOf("{Mistake: Stop repeating the same idea and keep pressure. Best was Bb5}"),
+    );
+    expect(result.indexOf("a6")).toBeLessThan(
+      result.indexOf("{Mistake: Castle before grabbing space. Best was a6}"),
+    );
   });
 });

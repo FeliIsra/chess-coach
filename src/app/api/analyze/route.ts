@@ -6,7 +6,14 @@ import {
   generateOverallInsight,
   aggregateWeakSpots,
 } from "@/lib/llm-coach";
-import { AnalysisProgress, ChessGame, GameAnalysis, LLMInsight } from "@/lib/types";
+import {
+  AnalysisProgress,
+  ChessGame,
+  GameAnalysis,
+  LLMInsight,
+  PhaseBreakdown,
+  PhaseMetrics,
+} from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -29,6 +36,33 @@ function estimateStockfishPercent(progressByGame: number[]): number {
   if (progressByGame.length === 0) return 0;
   const totalProgress = progressByGame.reduce((sum, value) => sum + value, 0);
   return Math.round((totalProgress / progressByGame.length) * 100);
+}
+
+function createPhaseMetrics(): PhaseMetrics {
+  return {
+    moves: 0,
+    errors: 0,
+    blunders: 0,
+    mistakes: 0,
+    inaccuracies: 0,
+  };
+}
+
+function createPhaseBreakdown(): PhaseBreakdown {
+  return {
+    opening: createPhaseMetrics(),
+    middlegame: createPhaseMetrics(),
+    endgame: createPhaseMetrics(),
+  };
+}
+
+function addPhaseMetrics(target: PhaseMetrics, source?: PhaseMetrics): void {
+  if (!source) return;
+  target.moves += source.moves;
+  target.errors += source.errors;
+  target.blunders += source.blunders;
+  target.mistakes += source.mistakes;
+  target.inaccuracies += source.inaccuracies;
 }
 
 export async function POST(request: NextRequest) {
@@ -223,6 +257,21 @@ export async function POST(request: NextRequest) {
         const wins = allAnalyses.filter((a) => a.game.result === "win").length;
         const losses = allAnalyses.filter((a) => a.game.result === "loss").length;
         const draws = allAnalyses.filter((a) => a.game.result === "draw").length;
+        const phaseBreakdown = createPhaseBreakdown();
+        let totalEngineDepth = 0;
+        let engineDepthSamples = 0;
+        for (const analysis of allAnalyses) {
+          addPhaseMetrics(phaseBreakdown.opening, analysis.phaseBreakdown?.opening);
+          addPhaseMetrics(
+            phaseBreakdown.middlegame,
+            analysis.phaseBreakdown?.middlegame
+          );
+          addPhaseMetrics(phaseBreakdown.endgame, analysis.phaseBreakdown?.endgame);
+          if (analysis.engineDepth !== undefined) {
+            totalEngineDepth += analysis.engineDepth;
+            engineDepthSamples += 1;
+          }
+        }
 
         // Calculate time pressure blunder percentage
         let timePressureBlunderPercent: number | undefined;
@@ -269,6 +318,9 @@ export async function POST(request: NextRequest) {
               allAnalyses.reduce((s, a) => s + (a.game.accuracy ?? 0), 0) /
               allAnalyses.length,
             timePressureBlunderPercent,
+            phaseBreakdown,
+            averageEngineDepth:
+              engineDepthSamples > 0 ? totalEngineDepth / engineDepthSamples : undefined,
           },
           overallInsight,
           weakSpots,

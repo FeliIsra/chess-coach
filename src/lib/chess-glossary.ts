@@ -1,10 +1,10 @@
 export const CHESS_GLOSSARY: Record<string, string> = {
   Blunders:
-    "A move that loses significant material or position (more than 2 pawns of value). Avoiding blunders is the fastest way to improve.",
+    "A move that throws away a large amount of value, usually 2+ pawns. These are the fastest mistakes to fix because they swing games immediately.",
   Mistakes:
-    "A move that loses moderate advantage (0.5 to 2 pawns of value). Less severe than blunders but still costly over a full game.",
+    "A move that gives up a meaningful edge, usually around 0.5 to 2 pawns. Not as severe as a blunder, but still enough to change the game.",
   "Average Accuracy":
-    "How close your moves were to the engine's best moves. 100% means every move was perfect. Most club players score 60-80%.",
+    "How often your moves stayed close to the engine's best choices. Higher is better, but the useful question is whether your worst moves are becoming less costly.",
   Inaccuracy:
-    "A slightly imprecise move that loses a small amount of advantage (0.2 to 0.5 pawns).",
+    "A small slip that gives away a little value. One inaccuracy is rarely fatal, but many of them make the rest of the game harder.",
 };

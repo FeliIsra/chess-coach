@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { Chess } from "chess.js";
+import type { CSSProperties } from "react";
+import { Chess, type Square } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import { LLMInsight, MoveAnalysis, TacticalCategory } from "@/lib/types";
 import { formatBestMoveLabel } from "@/lib/chess-format";
@@ -10,6 +11,11 @@ import {
   createPuzzleSessionStats,
   getFirstTryRatePercent,
 } from "@/lib/puzzle-metrics";
+import {
+  describeEvalLoss,
+  formatEvalLossPawns,
+  playPuzzleCue,
+} from "@/lib/puzzle-feedback";
 
 export interface Puzzle {
   id: string;
@@ -82,6 +88,16 @@ export function extractPuzzles(
 
 type FeedbackState = "correct" | "wrong" | "revealed" | null;
 
+type AttemptTrace = {
+  from: Square;
+  to: Square;
+  correct: boolean;
+};
+
+function isSquare(value: string): value is Square {
+  return /^[a-h][1-8]$/.test(value);
+}
+
 export function getRevealExplanation(puzzle: Puzzle): string {
   if (puzzle.explanation) {
     return puzzle.explanation;
@@ -98,14 +114,8 @@ export function getRevealExplanation(puzzle: Puzzle): string {
   return "The engine move keeps more control of the position and avoids the tactical or structural damage caused by your move.";
 }
 
-/** Map a centipawn eval-loss to a human-friendly description. */
 export function humanizeEval(centipawns: number): string {
-  const pawns = centipawns / 100;
-  if (pawns < 0.3) return "a slight edge";
-  if (pawns < 0.7) return "a small advantage";
-  if (pawns < 1.5) return "a significant advantage";
-  if (pawns < 3.0) return "roughly a piece worth of advantage";
-  return "a decisive advantage";
+  return describeEvalLoss(centipawns);
 }
 
 export default function PuzzleTrainer({
@@ -119,17 +129,109 @@ export default function PuzzleTrainer({
   const [feedback, setFeedback] = useState<FeedbackState>(null);
   const [hintLevel, setHintLevel] = useState(0);
   const [showAfterPosition, setShowAfterPosition] = useState(false);
+  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
+  const [lastAttempt, setLastAttempt] = useState<AttemptTrace | null>(null);
 
   const puzzle = puzzles[currentIndex];
   const isFinished = currentIndex >= puzzles.length;
+  const bestMoveFrom = puzzle?.bestMove.slice(0, 2) ?? "";
+  const bestMoveTo = puzzle?.bestMove.slice(2, 4) ?? "";
+  const puzzleSide = puzzle?.userColor === "white" ? "w" : "b";
 
-  const moveToNextPuzzle = useCallback(() => {
+  const boardSquareStyles = useMemo(() => {
+    if (!puzzle) return {};
+
+    const styles: Record<string, CSSProperties> = {};
+
+    if (!feedback && !showAfterPosition) {
+      styles[puzzle.from] = {
+        backgroundColor: "rgba(251, 191, 36, 0.16)",
+        boxShadow: "inset 0 0 0 3px rgba(251, 191, 36, 0.65)",
+        animation: "puzzle-square-pulse 1.8s ease-in-out infinite",
+      };
+    }
+
+    if (selectedSquare) {
+      styles[selectedSquare] = {
+        backgroundColor: "rgba(96, 165, 250, 0.18)",
+        boxShadow: "inset 0 0 0 3px rgba(96, 165, 250, 0.85)",
+      };
+    }
+
+    if (feedback === "wrong" && lastAttempt) {
+      styles[lastAttempt.from] = {
+        backgroundColor: "rgba(248, 113, 113, 0.16)",
+        boxShadow: "inset 0 0 0 3px rgba(248, 113, 113, 0.82)",
+      };
+      styles[lastAttempt.to] = {
+        backgroundColor: "rgba(248, 113, 113, 0.16)",
+        boxShadow: "inset 0 0 0 3px rgba(248, 113, 113, 0.82)",
+      };
+    }
+
+    if (feedback === "revealed" || showAfterPosition) {
+      styles[bestMoveFrom] = {
+        backgroundColor: "rgba(74, 222, 128, 0.16)",
+        boxShadow: "inset 0 0 0 3px rgba(74, 222, 128, 0.82)",
+      };
+      styles[bestMoveTo] = {
+        backgroundColor: "rgba(74, 222, 128, 0.16)",
+        boxShadow: "inset 0 0 0 3px rgba(74, 222, 128, 0.82)",
+      };
+    }
+
+    return styles;
+  }, [
+    bestMoveFrom,
+    bestMoveTo,
+    feedback,
+    lastAttempt,
+    puzzle,
+    selectedSquare,
+    showAfterPosition,
+  ]);
+
+  const boardArrows = useMemo(() => {
+    if (!puzzle) return [];
+
+    if (feedback === "revealed" || showAfterPosition) {
+      return [
+        {
+          startSquare: bestMoveFrom,
+          endSquare: bestMoveTo,
+          color: "rgba(74, 222, 128, 0.82)",
+        },
+      ];
+    }
+
+    if (lastAttempt) {
+      return [
+        {
+          startSquare: lastAttempt.from,
+          endSquare: lastAttempt.to,
+          color: lastAttempt.correct
+            ? "rgba(74, 222, 128, 0.82)"
+            : "rgba(248, 113, 113, 0.82)",
+        },
+      ];
+    }
+
+    return [];
+  }, [bestMoveFrom, bestMoveTo, feedback, lastAttempt, puzzle, showAfterPosition]);
+
+  const resetPuzzleState = useCallback(() => {
     setFeedback(null);
     setAttemptsForCurrent(0);
     setHintLevel(0);
     setShowAfterPosition(false);
-    setCurrentIndex((i) => i + 1);
+    setSelectedSquare(null);
+    setLastAttempt(null);
   }, []);
+
+  const moveToNextPuzzle = useCallback(() => {
+    resetPuzzleState();
+    setCurrentIndex((i) => i + 1);
+  }, [resetPuzzleState]);
 
   useEffect(() => {
     if (feedback !== "correct") return;
@@ -141,18 +243,10 @@ export default function PuzzleTrainer({
     return () => window.clearTimeout(timer);
   }, [feedback, moveToNextPuzzle]);
 
-  const handleDrop = useCallback(
-    ({
-      sourceSquare,
-      targetSquare,
-    }: {
-      piece: unknown;
-      sourceSquare: string;
-      targetSquare: string | null;
-    }) => {
+  const attemptMove = useCallback(
+    (sourceSquare: Square, targetSquare: Square) => {
       if (
         !puzzle ||
-        !targetSquare ||
         feedback === "correct" ||
         feedback === "revealed" ||
         showAfterPosition
@@ -177,12 +271,16 @@ export default function PuzzleTrainer({
       setStats((current) =>
         applyPuzzleAttempt(current, attemptsForCurrent, isCorrect)
       );
+      setLastAttempt({ from: sourceSquare, to: targetSquare, correct: isCorrect });
+      setSelectedSquare(null);
 
       if (isCorrect) {
         setFeedback("correct");
+        playPuzzleCue("correct");
       } else {
         setFeedback("wrong");
         setAttemptsForCurrent((current) => current + 1);
+        playPuzzleCue("wrong");
       }
 
       return true;
@@ -190,25 +288,116 @@ export default function PuzzleTrainer({
     [attemptsForCurrent, feedback, puzzle, showAfterPosition]
   );
 
+  const handleDrop = useCallback(
+    ({
+      sourceSquare,
+      targetSquare,
+    }: {
+      piece: unknown;
+      sourceSquare: string;
+      targetSquare: string | null;
+    }) => {
+      if (!targetSquare || !isSquare(sourceSquare) || !isSquare(targetSquare)) {
+        return false;
+      }
+      return attemptMove(sourceSquare, targetSquare);
+    },
+    [attemptMove]
+  );
+
+  const handlePieceDrag = useCallback(
+    ({ square }: { square?: string | null }) => {
+      if (
+        !puzzle ||
+        feedback === "correct" ||
+        feedback === "revealed" ||
+        showAfterPosition ||
+        !square ||
+        !isSquare(square)
+      ) {
+        return;
+      }
+
+      setSelectedSquare(square);
+      playPuzzleCue("pickup");
+    },
+    [feedback, puzzle, showAfterPosition]
+  );
+
+  const handleSquareClick = useCallback(
+    ({ square }: { square?: string | null }) => {
+      if (
+        !puzzle ||
+        feedback === "correct" ||
+        feedback === "revealed" ||
+        showAfterPosition ||
+        !square ||
+        !isSquare(square)
+      ) {
+        return;
+      }
+
+      if (!selectedSquare) {
+        const chess = new Chess(puzzle.fen);
+        const clickedPiece = chess.get(square);
+        if (clickedPiece?.color === puzzleSide) {
+          setSelectedSquare(square);
+          playPuzzleCue("pickup");
+        }
+        return;
+      }
+
+      if (selectedSquare === square) {
+        setSelectedSquare(null);
+        return;
+      }
+
+      const attempted = attemptMove(selectedSquare, square);
+      if (!attempted) {
+        const chess = new Chess(puzzle.fen);
+        const clickedPiece = chess.get(square);
+        if (clickedPiece?.color === puzzleSide) {
+          setSelectedSquare(square);
+          playPuzzleCue("pickup");
+        }
+      }
+    },
+    [attemptMove, feedback, puzzle, puzzleSide, selectedSquare, showAfterPosition]
+  );
+
   if (isFinished) {
     return (
-      <div className="bg-surface-1 rounded-2xl border border-border p-6 text-center space-y-4">
-        <h3 className="text-lg font-bold text-foreground">Practice Complete</h3>
-        <p className="text-3xl font-bold text-primary">
+      <div className="surface-frame rounded-[28px] p-6 text-center space-y-5">
+        <div className="inline-flex items-center rounded-full border border-border bg-surface-2 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+          Practice complete
+        </div>
+        <h3 className="text-xl font-semibold text-foreground">You finished the puzzle set</h3>
+        <p className="text-4xl font-semibold text-primary">
           {stats.solved}/{puzzles.length}
         </p>
-        <div className="space-y-1 text-sm text-muted">
-          <p>{stats.solvedFirstTry} solved on the first try</p>
-          <p>{stats.attemptedPuzzles} puzzles attempted</p>
-          <p>{stats.attempts} total move attempts</p>
-          <p>
-            {getFirstTryRatePercent(stats.solvedFirstTry, stats.attemptedPuzzles)}%
-            {" "}first-try rate
-          </p>
+        <div className="grid grid-cols-2 gap-2 text-sm text-muted md:grid-cols-4">
+          <div className="rounded-2xl border border-border bg-surface-2 px-3 py-2">
+            <p className="text-base font-semibold text-foreground">{stats.solvedFirstTry}</p>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-muted">First try</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-surface-2 px-3 py-2">
+            <p className="text-base font-semibold text-foreground">{stats.attemptedPuzzles}</p>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-muted">Attempted</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-surface-2 px-3 py-2">
+            <p className="text-base font-semibold text-foreground">{stats.attempts}</p>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-muted">Move tries</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-surface-2 px-3 py-2">
+            <p className="text-base font-semibold text-foreground">
+              {getFirstTryRatePercent(stats.solvedFirstTry, stats.attemptedPuzzles)}%
+            </p>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-muted">First-try rate</p>
+          </div>
         </div>
         <button
           onClick={onClose}
-          className="px-6 py-2 bg-primary hover:bg-primary-hover text-white font-semibold rounded-xl transition-colors"
+          className="rounded-xl bg-primary px-6 py-2.5 font-semibold text-white transition-colors hover:bg-primary-hover"
         >
           Back to Results
         </button>
@@ -220,20 +409,23 @@ export default function PuzzleTrainer({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-foreground">Practice Your Mistakes</h3>
-        <button onClick={onClose} className="text-sm text-muted hover:text-foreground">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-muted">Practice mode</p>
+          <h3 className="mt-1 text-lg font-semibold text-foreground">Practice Your Mistakes</h3>
+        </div>
+        <button onClick={onClose} className="rounded-full border border-border bg-surface-2 px-3 py-1.5 text-sm text-muted transition-colors hover:text-foreground">
           Close
         </button>
       </div>
 
-      <div className="bg-surface-1 rounded-2xl border border-border p-4 space-y-4">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted">
+      <div className="surface-frame rounded-[28px] p-4 space-y-4 md:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+          <span className="inline-flex items-center rounded-full border border-border bg-surface-2 px-3 py-1 text-muted">
             Puzzle {currentIndex + 1} of {puzzles.length}
           </span>
           <div className="text-right">
-            <p className="font-mono text-foreground">{stats.solved} solved</p>
+            <p className="font-semibold text-foreground">{stats.solved} solved</p>
             <p className="text-xs text-muted">
               {stats.attemptedPuzzles} attempted ·
               {" "}
@@ -243,21 +435,28 @@ export default function PuzzleTrainer({
           </div>
         </div>
 
-        <p className="text-sm text-foreground/80">
+        <p className="rounded-2xl border border-border/80 bg-surface-2 px-4 py-3 text-sm leading-6 text-foreground/80">
           You played <span className="font-mono text-accent-red">{puzzle.san}</span> (
-          {puzzle.classification}) on move {puzzle.moveNumber}. Find a better move to avoid
-          losing {humanizeEval(puzzle.evalLoss)} (~{(puzzle.evalLoss / 100).toFixed(1)}).
+          {puzzle.classification}) on move {puzzle.moveNumber}. Drag or tap the glowing piece
+          to avoid giving away {describeEvalLoss(puzzle.evalLoss)} (
+          {formatEvalLossPawns(puzzle.evalLoss)}).
         </p>
+
+        <div className="rounded-2xl border border-border/80 bg-surface-2 px-3 py-2.5 text-xs leading-5 text-foreground/75">
+          {selectedSquare
+            ? `Selected ${selectedSquare.toUpperCase()}. Tap the landing square or drag a different piece.`
+            : "Start by dragging or tapping the highlighted piece, then choose its destination square."}
+        </div>
 
         {(puzzle.category || puzzle.concept) && hintLevel === 0 && (
           <div className="flex flex-wrap gap-2">
             {puzzle.category && (
-              <span className="text-xs bg-accent-blue/15 text-accent-blue px-2 py-1 rounded-full capitalize">
+              <span className="rounded-full border border-accent-blue/20 bg-accent-blue/15 px-2 py-1 text-xs capitalize text-accent-blue">
                 Theme: {puzzle.category}
               </span>
             )}
             {puzzle.concept && (
-              <span className="text-xs bg-surface-2 text-foreground/70 px-2 py-1 rounded-full">
+              <span className="rounded-full border border-border bg-surface-2 px-2 py-1 text-xs text-foreground/70">
                 {puzzle.concept}
               </span>
             )}
@@ -265,14 +464,14 @@ export default function PuzzleTrainer({
         )}
 
         {hintLevel >= 1 && hintLevel <= 3 && feedback !== "revealed" && (
-          <div className="bg-accent-blue/10 border border-accent-blue/25 rounded-xl px-4 py-3 text-sm space-y-1">
+          <div className="rounded-2xl border border-accent-blue/25 bg-accent-blue/10 px-4 py-3 text-sm space-y-1">
             <p className="font-semibold text-accent-blue">
               Hint {hintLevel} of 3
             </p>
             {hintLevel >= 1 && (
               <p className="text-foreground/80">
                 {puzzle.concept
-                  ? `Think about ${puzzle.concept}...`
+                  ? `Think about ${puzzle.concept}.`
                   : puzzle.category
                     ? `This is a ${puzzle.category} problem.`
                     : "Look for the move that improves your position the most."}
@@ -305,41 +504,48 @@ export default function PuzzleTrainer({
 
         <div className="flex justify-center">
           <div
-            className={`rounded-lg overflow-hidden border-2 transition-colors duration-300 ${
+            className={`puzzle-board-shell board-frame overflow-hidden rounded-2xl border-2 bg-surface-2 p-2 transition-colors duration-300 ${
               feedback === "correct"
-                ? "border-accent-green"
+                ? "puzzle-board-shell--correct border-accent-green"
                 : feedback === "wrong"
-                  ? "border-accent-red"
-                  : "border-transparent"
+                  ? "puzzle-board-shell--wrong border-accent-red"
+                  : feedback === "revealed"
+                    ? "puzzle-board-shell--revealed border-accent-blue"
+                    : "border-transparent"
             }`}
           >
             <Chessboard
               options={{
                 position: showAfterPosition ? puzzle.fenAfter : puzzle.fen,
                 boardOrientation: puzzle.userColor,
-                darkSquareStyle: { backgroundColor: "#4a3728" },
-                lightSquareStyle: { backgroundColor: "#d4a96a" },
+                darkSquareStyle: { backgroundColor: "var(--board-dark)" },
+                lightSquareStyle: { backgroundColor: "var(--board-light)" },
                 allowDragging:
                   feedback !== "correct" &&
                   feedback !== "revealed" &&
                   !showAfterPosition,
                 allowDrawingArrows: false,
-                arrows: [
-                  {
-                    startSquare: puzzle.from,
-                    endSquare: puzzle.to,
-                    color: "rgba(239, 68, 68, 0.8)",
-                  },
-                ],
+                squareStyles: boardSquareStyles,
+                arrows: boardArrows,
                 onPieceDrop: handleDrop,
+                onPieceDrag: handlePieceDrag,
+                onSquareClick: handleSquareClick,
               }}
             />
           </div>
         </div>
         <div className="flex justify-end">
           <button
-            onClick={() => setShowAfterPosition((current) => !current)}
-            className="px-3 py-1.5 text-xs bg-surface-2 hover:bg-surface-3 text-foreground rounded-md transition-colors border border-border"
+            onClick={() => {
+              const next = !showAfterPosition;
+              if (next) {
+                setSelectedSquare(null);
+                setLastAttempt(null);
+                playPuzzleCue("reveal");
+              }
+              setShowAfterPosition(next);
+            }}
+            className="rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs text-foreground transition-colors hover:bg-surface-3"
           >
             {showAfterPosition ? "Show Before Move" : "Show After Move"}
           </button>
@@ -351,14 +557,16 @@ export default function PuzzleTrainer({
         )}
 
         {feedback === "correct" && (
-          <div className="bg-accent-green/10 border border-accent-green/30 rounded-xl px-4 py-3 text-accent-green text-sm text-center">
-            <p className="font-semibold text-lg">Correct!</p>
-            <p className="mt-1">That move holds the position together better than {puzzle.san}.</p>
+          <div className="rounded-2xl border border-accent-green/30 bg-accent-green/10 px-4 py-3 text-center text-sm text-accent-green puzzle-board-shell--correct">
+            <p className="text-lg font-semibold">Correct!</p>
+            <p className="mt-1">
+              That move keeps the position under control better than {puzzle.san}.
+            </p>
           </div>
         )}
 
         {feedback === "wrong" && (
-          <div className="bg-accent-red/10 border border-accent-red/30 rounded-xl px-4 py-3 text-sm">
+          <div className="rounded-2xl border border-accent-red/30 bg-accent-red/10 px-4 py-3 text-sm puzzle-board-shell--wrong">
             <p className="font-semibold text-accent-red">Not quite — try again</p>
             <p className="mt-1 text-foreground/70">
               {attemptsForCurrent >= 2
@@ -374,7 +582,7 @@ export default function PuzzleTrainer({
         )}
 
         {feedback === "revealed" && (
-          <div className="bg-accent-blue/10 border border-accent-blue/30 rounded-xl px-4 py-3 text-sm text-foreground/80">
+          <div className="rounded-2xl border border-accent-blue/30 bg-accent-blue/10 px-4 py-3 text-sm text-foreground/80 puzzle-board-shell--revealed">
             <p className="font-semibold text-accent-blue">Solution</p>
             <p className="mt-1">
               Best move: <span className="font-mono text-accent-blue">{puzzle.bestMoveLabel}</span>
@@ -397,15 +605,19 @@ export default function PuzzleTrainer({
                 onClick={() => {
                   setHintLevel((h) => Math.min(h + 1, 3));
                 }}
-                className="px-3 py-2 text-xs bg-accent-blue/10 hover:bg-accent-blue/20 text-accent-blue rounded-lg border border-accent-blue/25 transition-colors"
+                className="rounded-lg border border-accent-blue/25 bg-accent-blue/10 px-3 py-2 text-xs text-accent-blue transition-colors hover:bg-accent-blue/20"
               >
                 Get Hint
               </button>
             )}
             {feedback !== "correct" && feedback !== "revealed" && (
               <button
-                onClick={() => setFeedback("revealed")}
-                className="px-3 py-2 text-xs bg-surface-2 hover:bg-surface-3 text-foreground rounded-lg border border-border transition-colors"
+                onClick={() => {
+                  setFeedback("revealed");
+                  setLastAttempt(null);
+                  playPuzzleCue("reveal");
+                }}
+                className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-xs text-foreground transition-colors hover:bg-surface-3"
               >
                 Show Answer
               </button>
@@ -413,7 +625,7 @@ export default function PuzzleTrainer({
             {(feedback === "revealed" || feedback === "wrong" || feedback === "correct") && (
               <button
                 onClick={moveToNextPuzzle}
-                className={`px-3 py-2 text-xs rounded-lg border transition-colors ${
+                className={`rounded-lg border px-3 py-2 text-xs transition-colors ${
                   feedback === "correct"
                     ? "bg-primary hover:bg-primary-hover border-primary text-white"
                     : "bg-surface-2 hover:bg-surface-3 border-border text-foreground"

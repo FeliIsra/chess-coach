@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Chess Coach - Improve Your Game",
+  title: "Chess Coach | Game Review",
   description:
-    "Upload your Chess.com username and get AI-powered tips to improve your chess",
+    "Analyze Chess.com games with a cleaner, more visual coaching loop: summaries, puzzles, openings, and progress tracking.",
 };
 
 export const viewport: Viewport = {
@@ -20,7 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased min-h-screen">{children}</body>
+      <body className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/30 selection:text-foreground">
+        {children}
+      </body>
     </html>
   );
 }

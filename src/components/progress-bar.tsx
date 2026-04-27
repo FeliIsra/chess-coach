@@ -77,11 +77,11 @@ export default function ProgressBar({
           return (
             <div
               key={step.key}
-              className={`rounded-xl border px-2 py-2.5 text-center transition-colors ${
+              className={`rounded-2xl border px-2 py-2.5 text-center transition-all ${
                 isCompleted
-                  ? "border-primary/50 bg-primary/10"
+                  ? "border-primary/40 bg-primary/10"
                   : isActive
-                  ? "border-primary bg-primary/15"
+                  ? "border-primary bg-primary/15 shadow-[0_10px_30px_rgba(86,195,106,0.16)]"
                   : "border-border bg-surface-2"
               }`}
             >
@@ -114,7 +114,7 @@ export default function ProgressBar({
         })}
       </div>
 
-      <div className="bg-surface-1 rounded-xl border border-border px-4 py-4 space-y-3">
+      <div className="surface-frame rounded-[24px] px-4 py-4 space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-muted">
@@ -157,7 +157,7 @@ export default function ProgressBar({
       </div>
 
       {showPhaseProgress && (
-        <div className="flex items-start gap-2.5 bg-surface-2 rounded-lg border border-border px-3 py-2.5">
+        <div className="flex items-start gap-2.5 rounded-2xl border border-border bg-surface-2 px-3 py-2.5">
           <div className="mt-0.5 w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
           <div className="space-y-1">
             <p className="text-xs uppercase tracking-[0.18em] text-muted">

@@ -8,6 +8,17 @@ function safeDecode(value: string): string {
   }
 }
 
+function titleCaseWord(word: string): string {
+  return word
+    .split("-")
+    .map((part) => {
+      if (/^[A-Z]{2,}$/.test(part)) return part;
+      if (part === "s") return part;
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    })
+    .join("-");
+}
+
 export function sanitizeOpeningName(name?: string): string {
   if (!name) return "Unknown opening";
 
@@ -29,14 +40,17 @@ export function sanitizeOpeningName(name?: string): string {
   // Title-case each word
   const titled = normalized
     .split(" ")
-    .map((word) => {
-      if (/^[A-Z]{2,}$/.test(word)) return word;
-      return word.charAt(0).toUpperCase() + word.slice(1);
-    })
+    .map(titleCaseWord)
     .join(" ");
 
+  const polished = titled
+    .replace(/\bCaro Kann\b/gi, "Caro-Kann")
+    .replace(/\bNimzo Indian\b/gi, "Nimzo-Indian")
+    .replace(/\bNimzo Larsen\b/gi, "Nimzo-Larsen")
+    .replace(/\bQueens Indian\b/gi, "Queen's Indian");
+
   // Strip move notation (e.g. "1...E5", "2.Nf3", "3.Bb2", trailing "E5", "O O")
-  const stripped = titled
+  const stripped = polished
     .replace(/\.{2,}\d+\.\S+.*$/g, "")          // "Variation...4.Bg2 ..." (dots glued to digits)
     .replace(/\s+\d+\.\.\.?\s*\S+/g, "")        // " 2...d6", " 1...E5"
     .replace(/\s+\d+\.\S+.*$/g, "")             // " 3.Bb2 E5"

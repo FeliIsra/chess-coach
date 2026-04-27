@@ -21,8 +21,17 @@ describe("sanitizeOpeningName", () => {
 
   it("normalizes separators", () => {
     expect(sanitizeOpeningName("openings/caro-kann-defense")).toBe(
-      "Caro Kann Defense"
+      "Caro-Kann Defense"
     );
+  });
+
+  it("keeps common opening compounds readable", () => {
+    expect(
+      sanitizeOpeningName("https://www.chess.com/openings/nimzo-indian-defense")
+    ).toBe("Nimzo-Indian Defense");
+    expect(
+      sanitizeOpeningName("https://www.chess.com/openings/nimzo-larsen-attack")
+    ).toBe("Nimzo-Larsen Attack");
   });
 
   it("truncates to main opening and first variation", () => {
