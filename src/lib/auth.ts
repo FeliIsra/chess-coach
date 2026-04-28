@@ -50,3 +50,42 @@ export async function requireUser(
     : `/${safeLocale}/sign-in`;
   redirect(target);
 }
+
+export type UserRole = "user" | "admin";
+
+/**
+ * Reads the current user's role from `profiles`. Returns `'user'` if the user
+ * is signed in but has no profile row yet, and `null` if there is no session.
+ */
+export async function getUserRole(): Promise<UserRole | null> {
+  try {
+    const user = await getUser();
+    if (!user) return null;
+    const supabase = await getSupabaseServerClient();
+    const { data } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle<{ role: UserRole | null }>();
+    const role = data?.role;
+    return role === "admin" ? "admin" : "user";
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Returns the current user only if they have role 'admin'. Otherwise renders
+ * a 404 (we don't reveal that admin routes exist to non-admins).
+ */
+export async function requireAdmin(
+  locale: string = DEFAULT_LOCALE
+): Promise<User> {
+  const user = await requireUser(locale);
+  const role = await getUserRole();
+  if (role !== "admin") {
+    const { notFound } = await import("next/navigation");
+    notFound();
+  }
+  return user;
+}

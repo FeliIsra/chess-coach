@@ -10,9 +10,10 @@ interface HeaderProps {
   locale: string;
   user: User | null;
   displayName?: string | null;
+  isAdmin?: boolean;
 }
 
-export default function Header({ locale, user, displayName }: HeaderProps) {
+export default function Header({ locale, user, displayName, isAdmin }: HeaderProps) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -96,6 +97,16 @@ export default function Header({ locale, user, displayName }: HeaderProps) {
                   >
                     Profile
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      href={`/${locale}/admin`}
+                      role="menuitem"
+                      className="block px-4 py-2 text-sm text-foreground hover:bg-surface-2"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      Admin
+                    </Link>
+                  )}
                   <button
                     type="button"
                     role="menuitem"

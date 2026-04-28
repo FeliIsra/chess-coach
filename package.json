@@ -8,20 +8,21 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "seed:admin": "tsx scripts/seed-admin.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.98.0",
     "chess.js": "^1.4.0",
     "next": "16.1.6",
+    "next-intl": "^4.9.2",
     "openai": "^6.25.0",
     "react": "19.2.3",
     "react-chessboard": "^5.10.0",
     "react-dom": "19.2.3",
     "recharts": "^3.7.0",
-    "stockfish": "^18.0.7",
-    "next-intl": "^4.9.2"
+    "stockfish": "^18.0.7"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
@@ -36,6 +37,7 @@
     "eslint-config-next": "16.1.6",
     "jsdom": "^28.1.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5",
     "vitest": "^4.0.18"
   }

@@ -22,25 +22,33 @@ export default async function LocaleLayout({
 
   const user = await getUser();
   let displayName: string | null = null;
+  let isAdmin = false;
 
   if (user) {
     try {
       const supabase = await getSupabaseServerClient();
       const { data } = await supabase
         .from("profiles")
-        .select("display_name")
+        .select("display_name, role")
         .eq("id", user.id)
-        .maybeSingle();
+        .maybeSingle<{ display_name: string | null; role: string | null }>();
       displayName = data?.display_name ?? null;
+      isAdmin = data?.role === "admin";
     } catch {
       // Profile fetch is best-effort for the header label.
       displayName = null;
+      isAdmin = false;
     }
   }
 
   return (
     <>
-      <Header locale={locale} user={user} displayName={displayName} />
+      <Header
+        locale={locale}
+        user={user}
+        displayName={displayName}
+        isAdmin={isAdmin}
+      />
       {children}
     </>
   );
