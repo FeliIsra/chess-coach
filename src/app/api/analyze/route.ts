@@ -66,9 +66,13 @@ function addPhaseMetrics(target: PhaseMetrics, source?: PhaseMetrics): void {
 }
 
 export async function POST(request: NextRequest) {
-  const { games } = (await request.json()) as {
+  const { games, locale } = (await request.json()) as {
     games: ChessGame[];
+    locale?: string;
   };
+  const safeLocale = ["en", "es", "pt"].includes(locale ?? "")
+    ? (locale as string)
+    : "en";
 
   if (!games?.length) {
     return new Response(JSON.stringify({ error: "No games provided" }), {
@@ -205,7 +209,7 @@ export async function POST(request: NextRequest) {
           });
 
           try {
-            const insight = await analyzeGameWithLLM(openai, allAnalyses[i]);
+            const insight = await analyzeGameWithLLM(openai, allAnalyses[i], { locale: safeLocale });
 
             llmActiveGames.delete(i);
             allInsights[i] = insight;
@@ -250,7 +254,8 @@ export async function POST(request: NextRequest) {
         const overallInsight = await generateOverallInsight(
           openai,
           allAnalyses,
-          allInsights
+          allInsights,
+          { locale: safeLocale }
         );
         const overallMs = Date.now() - overallStartedAt;
 

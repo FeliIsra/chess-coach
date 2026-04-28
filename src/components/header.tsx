@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import LocaleSwitcher from "@/components/locale-switcher";
 
 interface HeaderProps {
   locale: string;
@@ -15,6 +17,7 @@ interface HeaderProps {
 
 export default function Header({ locale, user, displayName, isAdmin }: HeaderProps) {
   const router = useRouter();
+  const t = useTranslations("header");
   const [menuOpen, setMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
@@ -54,6 +57,7 @@ export default function Header({ locale, user, displayName, isAdmin }: HeaderPro
         </Link>
 
         <nav className="flex items-center gap-3">
+          <LocaleSwitcher isAuthed={!!user} />
           {user ? (
             <div className="relative">
               <button
@@ -79,7 +83,7 @@ export default function Header({ locale, user, displayName, isAdmin }: HeaderPro
                     className="block px-4 py-2 text-sm text-foreground hover:bg-surface-2"
                     onClick={() => setMenuOpen(false)}
                   >
-                    Analyze games
+                    {t("analyze")}
                   </Link>
                   <Link
                     href={`/${locale}/history`}
@@ -87,7 +91,7 @@ export default function Header({ locale, user, displayName, isAdmin }: HeaderPro
                     className="block px-4 py-2 text-sm text-foreground hover:bg-surface-2"
                     onClick={() => setMenuOpen(false)}
                   >
-                    History
+                    {t("history")}
                   </Link>
                   <Link
                     href={`/${locale}/profile`}
@@ -95,7 +99,7 @@ export default function Header({ locale, user, displayName, isAdmin }: HeaderPro
                     className="block px-4 py-2 text-sm text-foreground hover:bg-surface-2"
                     onClick={() => setMenuOpen(false)}
                   >
-                    Profile
+                    {t("profile")}
                   </Link>
                   {isAdmin && (
                     <Link
@@ -104,7 +108,7 @@ export default function Header({ locale, user, displayName, isAdmin }: HeaderPro
                       className="block px-4 py-2 text-sm text-foreground hover:bg-surface-2"
                       onClick={() => setMenuOpen(false)}
                     >
-                      Admin
+                      {t("admin")}
                     </Link>
                   )}
                   <button
@@ -114,7 +118,7 @@ export default function Header({ locale, user, displayName, isAdmin }: HeaderPro
                     disabled={signingOut}
                     className="block w-full px-4 py-2 text-left text-sm text-foreground hover:bg-surface-2 disabled:opacity-60"
                   >
-                    {signingOut ? "Signing out..." : "Sign out"}
+                    {signingOut ? t("signingOut") : t("signOut")}
                   </button>
                 </div>
               )}
@@ -125,13 +129,13 @@ export default function Header({ locale, user, displayName, isAdmin }: HeaderPro
                 href={`/${locale}/sign-in`}
                 className="rounded-full px-3 py-1.5 text-sm text-foreground/80 hover:text-foreground"
               >
-                Sign in
+                {t("signIn")}
               </Link>
               <Link
                 href={`/${locale}/sign-up`}
                 className="rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-white hover:bg-primary-hover"
               >
-                Sign up
+                {t("signUp")}
               </Link>
             </>
           )}

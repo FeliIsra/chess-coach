@@ -1,10 +1,10 @@
-// NOTE: WT-J (i18n) will replace this with NextIntlClientProvider — keep this minimal.
 import { notFound } from "next/navigation";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, setRequestLocale } from "next-intl/server";
 import Header from "@/components/header";
 import { getUser } from "@/lib/auth";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
-
-const SUPPORTED_LOCALES = ["en", "es", "pt"] as const;
+import { routing } from "@/i18n/routing";
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
@@ -16,9 +16,11 @@ export default async function LocaleLayout({
   params,
 }: LocaleLayoutProps) {
   const { locale } = await params;
-  if (!(SUPPORTED_LOCALES as readonly string[]).includes(locale)) {
+  if (!(routing.locales as readonly string[]).includes(locale)) {
     notFound();
   }
+  setRequestLocale(locale);
+  const messages = await getMessages();
 
   const user = await getUser();
   let displayName: string | null = null;
@@ -35,14 +37,13 @@ export default async function LocaleLayout({
       displayName = data?.display_name ?? null;
       isAdmin = data?.role === "admin";
     } catch {
-      // Profile fetch is best-effort for the header label.
       displayName = null;
       isAdmin = false;
     }
   }
 
   return (
-    <>
+    <NextIntlClientProvider locale={locale} messages={messages}>
       <Header
         locale={locale}
         user={user}
@@ -50,6 +51,6 @@ export default async function LocaleLayout({
         isAdmin={isAdmin}
       />
       {children}
-    </>
+    </NextIntlClientProvider>
   );
 }

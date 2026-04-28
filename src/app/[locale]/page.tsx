@@ -1,28 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getUser, normaliseLocale } from "@/lib/auth";
 
 interface LandingProps {
   params: Promise<{ locale: string }>;
 }
-
-const VALUE_PROPS = [
-  {
-    title: "Analyze Chess.com games",
-    body: "Pull your latest games and get a Stockfish-powered review in under a minute.",
-    icon: "♟︎",
-  },
-  {
-    title: "AI coaching that talks like a coach",
-    body: "Get a plain-English breakdown of your blunders, missed plans, and what to study next.",
-    icon: "✦",
-  },
-  {
-    title: "Track your ELO progress",
-    body: "Watch your bullet, blitz, and rapid ratings move and connect them to the analyses you ran.",
-    icon: "↗︎",
-  },
-];
 
 export default async function LandingPage({ params }: LandingProps) {
   const { locale: rawLocale } = await params;
@@ -33,6 +16,26 @@ export default async function LandingPage({ params }: LandingProps) {
     redirect(`/${locale}/app`);
   }
 
+  const t = await getTranslations({ locale, namespace: "landing" });
+
+  const valueProps = [
+    {
+      title: t("analyzeTitle"),
+      body: t("analyzeBody"),
+      icon: "♟︎",
+    },
+    {
+      title: t("coachTitle"),
+      body: t("coachBody"),
+      icon: "✦",
+    },
+    {
+      title: t("eloTitle"),
+      body: t("eloBody"),
+      icon: "↗︎",
+    },
+  ];
+
   return (
     <main className="relative min-h-screen overflow-hidden">
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -42,15 +45,13 @@ export default async function LandingPage({ params }: LandingProps) {
 
       <section className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 pb-16 pt-12 text-center md:px-6 md:pb-24 md:pt-20">
         <p className="text-[11px] uppercase tracking-[0.28em] text-muted">
-          Personal chess coach
+          {t("kicker")}
         </p>
         <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl">
-          Turn your Chess.com games into a study plan
+          {t("headline")}
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-7 text-foreground/70 md:text-lg">
-          Run an AI-assisted review of your recent games, see exactly where you
-          drop the ball, and practice the same positions until the pattern
-          sticks.
+          {t("lede")}
         </p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -58,23 +59,20 @@ export default async function LandingPage({ params }: LandingProps) {
             href={`/${locale}/sign-up`}
             className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-hover"
           >
-            Sign up — it&apos;s free
+            {t("ctaSignUp")}
           </Link>
           <Link
             href={`/${locale}/sign-in`}
             className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground hover:bg-surface-2"
           >
-            Sign in
+            {t("ctaSignIn")}
           </Link>
         </div>
       </section>
 
       <section className="mx-auto grid w-full max-w-5xl gap-4 px-4 pb-20 md:grid-cols-3 md:px-6">
-        {VALUE_PROPS.map((prop) => (
-          <article
-            key={prop.title}
-            className="surface-frame rounded-2xl p-6"
-          >
+        {valueProps.map((prop) => (
+          <article key={prop.title} className="surface-frame rounded-2xl p-6">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-lg text-primary">
               <span aria-hidden>{prop.icon}</span>
             </div>
@@ -89,7 +87,7 @@ export default async function LandingPage({ params }: LandingProps) {
       </section>
 
       <footer className="border-t border-border py-6 text-center text-xs text-muted">
-        Powered by Stockfish engine analysis and AI coaching
+        {t("footer")}
       </footer>
     </main>
   );

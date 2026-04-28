@@ -2,6 +2,18 @@ import OpenAI from "openai";
 import { GameAnalysis, LLMInsight, TacticalCategory, WeakSpot } from "./types";
 import { sanitizeOpeningName } from "./chess-format";
 
+const LOCALE_LANGUAGE_NAME: Record<string, string> = {
+  en: "English",
+  es: "Spanish (es-419, neutral Latin American Spanish, informal 'tu')",
+  pt: "Brazilian Portuguese (pt-BR, informal 'voce')",
+};
+
+function localeInstruction(locale?: string): string {
+  if (!locale || locale === "en") return "";
+  const name = LOCALE_LANGUAGE_NAME[locale] ?? locale;
+  return `\n\nIMPORTANT: Respond entirely in ${name}. Translate every string value, but preserve the JSON keys exactly as specified. Keep chess-specific terms accurate for native speakers.`;
+}
+
 const VALID_CATEGORIES: TacticalCategory[] = [
   "tactics",
   "piece safety",
@@ -357,7 +369,7 @@ function sanitizeLLMInsight(
 export async function analyzeGameWithLLM(
   client: OpenAI,
   analysis: GameAnalysis,
-  options?: LLMStreamOptions
+  options?: LLMStreamOptions & { locale?: string }
 ): Promise<LLMInsight> {
   const { game, bestMoves, worstMoves } = analysis;
   const reviewMoves = worstMoves.filter((move) => move.classification !== "good").slice(0, 4);
@@ -412,7 +424,7 @@ Rules:
 - Never write psychological assumptions like "you probably thought" or "you likely thought".
 - Do not overpraise neutral moves. If the gain is small, describe it as "solid" instead of "excellent".
 - Keep every field concise. Prefer one precise sentence over multiple generic ones.
-- Improvement plan items must be specific drills tied to this game.`;
+- Improvement plan items must be specific drills tied to this game.${localeInstruction(options?.locale)}`;
 
   const parsed = await requestJsonCompletionWithStreaming(client, prompt, options);
   return sanitizeLLMInsight(parsed, reviewMoves, highlightMoves);
@@ -595,7 +607,7 @@ export async function generateOverallInsight(
   client: OpenAI,
   analyses: GameAnalysis[],
   insights: LLMInsight[],
-  options?: LLMStreamOptions
+  options?: LLMStreamOptions & { locale?: string }
 ): Promise<OverallInsightResponse> {
   const gamesSummary = analyses.map((a, i) => {
     const g = a.game;
@@ -643,7 +655,7 @@ Rules:
 - No motivational filler.
 - No psychological guesses about player intent.
 - Every study step must be concrete and measurable.
-- Include one weakSpotTips entry for each category: ${weakSpots.map((ws) => ws.category).join(", ") || "none"}.`;
+- Include one weakSpotTips entry for each category: ${weakSpots.map((ws) => ws.category).join(", ") || "none"}.${localeInstruction(options?.locale)}`;
 
   const parsed = await requestJsonCompletionWithStreaming(client, prompt, options);
   return sanitizeOverallInsight(parsed, weakSpots);

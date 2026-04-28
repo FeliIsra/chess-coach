@@ -10,6 +10,30 @@
     "spanish": "Spanish",
     "portuguese": "Portuguese"
   },
+  "header": {
+    "analyze": "Analyze games",
+    "history": "History",
+    "profile": "Profile",
+    "admin": "Admin",
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "signOut": "Sign out",
+    "signingOut": "Signing out..."
+  },
+  "landing": {
+    "kicker": "Personal chess coach",
+    "headline": "Turn your Chess.com games into a study plan",
+    "lede": "Run an AI-assisted review of your recent games, see exactly where you drop the ball, and practice the same positions until the pattern sticks.",
+    "ctaSignUp": "Sign up — it's free",
+    "ctaSignIn": "Sign in",
+    "footer": "Powered by Stockfish engine analysis and AI coaching",
+    "analyzeTitle": "Analyze Chess.com games",
+    "analyzeBody": "Pull your latest games and get a Stockfish-powered review in under a minute.",
+    "coachTitle": "AI coaching that talks like a coach",
+    "coachBody": "Get a plain-English breakdown of your blunders, missed plans, and what to study next.",
+    "eloTitle": "Track your ELO progress",
+    "eloBody": "Watch your bullet, blitz, and rapid ratings move and connect them to the analyses you ran."
+  },
   "home": {
     "usernameLabel": "Chess.com Username",
     "usernamePlaceholder": "e.g. hikaru",

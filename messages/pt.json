@@ -1,0 +1,172 @@
+{
+  "app": {
+    "title": "Treinador de Xadrez",
+    "tagline": "Análise com IA das suas partidas no Chess.com",
+    "footer": "Desenvolvido com análise do motor Stockfish e treinamento com IA"
+  },
+  "localeSwitcher": {
+    "label": "Idioma",
+    "english": "Inglês",
+    "spanish": "Espanhol",
+    "portuguese": "Português"
+  },
+  "header": {
+    "analyze": "Analisar partidas",
+    "history": "Histórico",
+    "profile": "Perfil",
+    "admin": "Admin",
+    "signIn": "Entrar",
+    "signUp": "Cadastrar-se",
+    "signOut": "Sair",
+    "signingOut": "Saindo..."
+  },
+  "landing": {
+    "kicker": "Treinador pessoal de xadrez",
+    "headline": "Transforme suas partidas do Chess.com em um plano de estudos",
+    "lede": "Realize uma revisão assistida por IA das suas partidas recentes, veja exatamente onde você erra e pratique as mesmas posições até que o padrão se fixe.",
+    "ctaSignUp": "Cadastre-se — é grátis",
+    "ctaSignIn": "Entrar",
+    "footer": "Desenvolvido com análise do motor Stockfish e treinamento com IA",
+    "analyzeTitle": "Analisar partidas do Chess.com",
+    "analyzeBody": "Puxe suas partidas mais recentes e obtenha uma revisão com o Stockfish em menos de um minuto.",
+    "coachTitle": "Treinamento com IA que fala como um treinador",
+    "coachBody": "Receba uma análise em linguagem simples dos seus erros graves, planos perdidos e o que estudar a seguir.",
+    "eloTitle": "Acompanhe seu progresso de ELO",
+    "eloBody": "Veja suas classificações de bullet, blitz e rápido se moverem e conecte-as às análises que você realizou."
+  },
+  "home": {
+    "usernameLabel": "Nome de usuário no Chess.com",
+    "usernamePlaceholder": "ex: hikaru",
+    "gamesToAnalyze": "Partidas para analisar: {count}",
+    "estimatedDuration": "Normalmente cerca de {min}-{max}s dependendo do Chess.com, motor e tempo de resposta da IA.",
+    "analyzeButton": "Analisar Minhas Partidas",
+    "fetchingMessage": "Buscando suas partidas no Chess.com...",
+    "errors": {
+      "fetchFailed": "Falha ao buscar partidas",
+      "noGames": "Nenhuma partida encontrada para este usuário",
+      "analyzeFailed": "Falha na solicitação de análise",
+      "noStream": "Sem fluxo de resposta",
+      "saveFailed": "Falha ao salvar sessão de análise",
+      "generic": "Algo deu errado"
+    }
+  },
+  "results": {
+    "header": "Sua Análise",
+    "gamesAnalyzed": "{count, plural, one {# partida analisada} other {# partidas analisadas}}",
+    "exportPgn": "Exportar PGN",
+    "newAnalysis": "Nova Análise",
+    "stats": {
+      "blunders": "Erros Graves",
+      "mistakes": "Erros",
+      "averageAccuracy": "Precisão Média"
+    },
+    "timePressure": {
+      "label": "{percent}% dos seus erros ocorreram sob pressão de tempo",
+      "warning": "Gestão do tempo é uma verdadeira falha nestas partidas."
+    },
+    "completedIn": "Análise concluída em {duration}",
+    "whatToFixFirst": "O Que Corrigir Primeiro",
+    "topProblems": "Principais problemas recorrentes",
+    "keepDoingThis": "Continue fazendo isso",
+    "nextTrainingBlock": "Próximo bloco de treinamento",
+    "startWithPuzzles": "Comece Com {count, plural, one {# quebra-cabeça de erro} other {# quebra-cabeças de erro}}",
+    "trainByTheme": "Treinar Por Tema",
+    "themePractice": "Pratique identificar padrões de {category} - você teve {count, plural, one {# erro} other {# erros}} nesta área nas suas partidas recentes.",
+    "practiceThisTheme": "Pratique este tema",
+    "yourOpenings": "Suas Aberturas",
+    "openingGames": "{count, plural, one {# partida} other {# partidas}}",
+    "blundersPerGame": "{value} erros graves/partida",
+    "gameDetails": "Detalhes da Partida",
+    "filters": {
+      "all": "Todas",
+      "wins": "Vitórias",
+      "losses": "Derrotas",
+      "draws": "Empates"
+    },
+    "noFilteredGames": "Nenhuma partida {filter} encontrada.",
+    "analyzeMoreGames": "Analisar Mais Partidas",
+    "viewOnChessCom": "Ver no Chess.com",
+    "analysisDepth": "Profundidade da análise: ~{ply} lance",
+    "vs": "vs",
+    "blunderCount": "{count, plural, one {# erro grave} other {# erros graves}}",
+    "mistakeCount": "{count, plural, one {# erro} other {# erros}}",
+    "practiceFirstMistake": "Pratique o primeiro erro crítico desta partida",
+    "keyMistakes": "Erros Chave",
+    "greatMoves": "Grandes Movimentos",
+    "howToImprove": "Como Melhorar",
+    "moveLabel": "Lance {number}: {move}",
+    "concept": "Conceito:",
+    "practiceThisPosition": "Pratique esta posição"
+  },
+  "puzzleTrainer": {
+    "header": "Pratique Seus Erros",
+    "close": "Fechar",
+    "puzzleCount": "Quebra-cabeça {current} de {total}",
+    "solvedCount": "{count} resolvidos",
+    "attemptedAndFirstTry": "{attempted} tentativas - {percent}% na primeira tentativa",
+    "youPlayed": "Você jogou {move} ({classification}) no lance {number}. Encontre um movimento melhor para evitar perder {evalDescription} (~{evalPawns}).",
+    "themeLabel": "Tema: {category}",
+    "hintHeader": "Dica {level} de 3",
+    "hintConcept": "Pense sobre {concept}...",
+    "hintCategory": "Este é um problema de {category}.",
+    "hintGeneric": "Procure o movimento que melhora mais sua posição.",
+    "hintPiece": "O melhor movimento envolve a peça em {square}.",
+    "hintFromTo": "Tente mover de {from} para {to}.",
+    "showAfterMove": "Mostrar Após o Movimento",
+    "showBeforeMove": "Mostrar Antes do Movimento",
+    "afterMoveDisabled": "Resolver está desativado nesta visualização. Volte para antes do movimento para jogar o quebra-cabeça.",
+    "feedbackCorrect": "Correto!",
+    "feedbackCorrectDescription": "Esse movimento mantém a posição melhor do que {move}.",
+    "feedbackWrongTitle": "Não exatamente - tente novamente",
+    "feedbackWrongHint": "Você pode revelar a solução, obter uma dica ou continuar tentando.",
+    "feedbackWrongQuick": "Procure o movimento que reduz o perigo imediatamente.",
+    "targetConcept": "Conceito alvo: {concept}",
+    "solutionTitle": "Solução",
+    "solutionBestMove": "Melhor movimento: {move}",
+    "solutionExplanation": "Seu movimento {played} deixou a avaliação cair rapidamente. {best} é a correção prática.",
+    "attemptsOnPuzzle": "Tentativas neste quebra-cabeça: {count}",
+    "getHint": "Obter Dica",
+    "showAnswer": "Mostrar Resposta",
+    "nextPuzzle": "Próximo quebra-cabeça",
+    "continue": "Continuar",
+    "practiceComplete": "Prática Completa",
+    "solvedFirstTry": "{count} resolvidos na primeira tentativa",
+    "puzzlesAttempted": "{count} quebra-cabeças tentados",
+    "totalAttempts": "{count} tentativas totais de movimento",
+    "firstTryRate": "{percent}% taxa de primeira tentativa",
+    "backToResults": "Voltar aos Resultados",
+    "evalDescriptions": {
+      "slightEdge": "uma ligeira vantagem",
+      "smallAdvantage": "uma pequena vantagem",
+      "significantAdvantage": "uma vantagem significativa",
+      "pieceAdvantage": "aproximadamente uma peça de vantagem",
+      "decisiveAdvantage": "uma vantagem decisiva"
+    },
+    "revealExplanation": {
+      "tactics": "A linha do motor funciona porque lida com a ideia tática forçada antes que seu oponente possa explorá-la.",
+      "kingSafety": "O movimento do motor reduz a pressão sobre seu rei e remove a continuação de ataque mais perigosa.",
+      "pieceSafety": "O movimento do motor mantém suas peças soltas defendidas e evita que a posição colapse taticamente.",
+      "default": "O movimento do motor mantém mais controle da posição e evita o dano tático ou estrutural causado pelo seu movimento."
+    }
+  },
+  "progressSummary": {
+    "title": "Seu Progresso",
+    "empty": "vazio",
+    "emptyDescription": "Conclua algumas análises e esta área começará a mostrar linhas de tendência.",
+    "trendImproving": "Melhorando",
+    "trendDeclining": "Declinando",
+    "trendStable": "Estável",
+    "sessions": "Sessões",
+    "games": "Partidas",
+    "averageBlundersPerGame": "Média de Erros Graves/Partida",
+    "sparklineLabel": "Média de erros graves por partida nas últimas {count, plural, one {# sessão} other {# sessões}}"
+  },
+  "trends": {
+    "improving": "Melhorando",
+    "declining": "Declinando",
+    "stable": "Estável"
+  },
+  "common": {
+    "loading": "Carregando..."
+  }
+}

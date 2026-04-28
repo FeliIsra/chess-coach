@@ -1,6 +1,7 @@
 "use client";
 
 import { useReducer, useState } from "react";
+import { useLocale } from "next-intl";
 import { ChessGame, AnalysisProgress, FullAnalysisResult } from "@/lib/types";
 import ResultsView from "@/components/results-view";
 import ProgressBar from "@/components/progress-bar";
@@ -21,6 +22,7 @@ interface AnalyzeClientProps {
 }
 
 export default function AnalyzeClient({ defaultUsername }: AnalyzeClientProps) {
+  const locale = useLocale();
   const [username, setUsername] = useState(defaultUsername ?? "");
   const [gameCount, setGameCount] = useState(5);
   const [stage, setStage] = useState<Stage>("input");
@@ -69,7 +71,7 @@ export default function AnalyzeClient({ defaultUsername }: AnalyzeClientProps) {
       const analyzeRes = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ games }),
+        body: JSON.stringify({ games, locale }),
       });
 
       if (!analyzeRes.ok) {
