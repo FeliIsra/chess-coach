@@ -81,6 +81,14 @@ export default function Header({ locale, user, displayName }: HeaderProps) {
                     Analyze games
                   </Link>
                   <Link
+                    href={`/${locale}/history`}
+                    role="menuitem"
+                    className="block px-4 py-2 text-sm text-foreground hover:bg-surface-2"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    History
+                  </Link>
+                  <Link
                     href={`/${locale}/profile`}
                     role="menuitem"
                     className="block px-4 py-2 text-sm text-foreground hover:bg-surface-2"

@@ -166,13 +166,24 @@ export interface FullAnalysisResult {
 }
 
 export interface AnalysisSession {
+  id?: string;
   date: string;
   username: string;
+  timeClass?: string;
   gamesCount: number;
   totalBlunders: number;
   totalMistakes: number;
   averageAccuracy: number;
   avgBlundersPerGame: number;
+  isPublic?: boolean;
+}
+
+export interface EloPoint {
+  rating: number;
+  capturedAt: string;
+  analysisId: string | null;
+  timeClass: string;
+  chessUsername: string;
 }
 
 export interface AnalysisProgress {
